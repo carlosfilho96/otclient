@@ -71,10 +71,29 @@ UIWidget
     anchors.top: prev.bottom
     margin-top: 7
     height: 22
+
+    $mobile:
+      height: 0
+      margin-top: 0
+      visible: false
+  
+    OptionCheckBox
+      id: showLeftExtraPanel
+      !text: tr('Show Left Horizontal Panel')
+
+      $mobile:
+        visible: false
+
+  SmallReversedQtPanel
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 7
+    height: 22
   
     OptionCheckBox
       id: showRightExtraPanel
-      !text: tr('Show an extra right panel')
+      !text: tr('Show Right Horizontal Panel')
       
   SmallReversedQtPanel
     anchors.left: parent.left

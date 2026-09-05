@@ -11,6 +11,9 @@ local currentDayTime = {
 }
 
 local function refreshVirtualFloors()
+    if not mapController.ui or not mapController.ui.layersPanel then
+        return
+    end
     mapController.ui.layersPanel.layersMark:setMarginTop(((virtualFloor + 1) * 4) - 3)
     mapController.ui.layersPanel.automapLayers:setImageClip((virtualFloor * 14) .. ' 0 14 67')
 end
@@ -26,7 +29,7 @@ local function onPositionChange()
         return
     end
 
-    local minimapWidget = mapController.ui.minimapBorder.minimap
+    local minimapWidget = getMiniMapUi()
     if not (minimapWidget) or minimapWidget:isDragging() then
         return
     end
@@ -45,12 +48,11 @@ mapController:setUI('minimap', modules.game_interface.getMainRightPanel())
 
 function onChangeWorldTime(hour, minute)
 --[[ 
-
 check 
 tfs c++ (old) : void ProtocolGame::sendWorldTime()
 tfs lua (new) : function Player.sendWorldTime(self, time)
 Canary: void ProtocolGame::sendTibiaTime(int32_t time)
- ]]
+]]
 
     currentDayTime = {
         h = hour % 24,
@@ -67,6 +69,10 @@ Canary: void ProtocolGame::sendTibiaTime(int32_t time)
 
         onChangeWorldTime(nextH, nextM)
     end, 30000, 'dayTime')
+
+    if not mapController.ui or not mapController.ui.rosePanel or not mapController.ui.rosePanel.ambients then
+        return
+    end
 
     local position = math.floor((124 / (24 * 60)) * ((hour * 60) + minute))
     local mainWidth = 31
@@ -96,14 +102,33 @@ Canary: void ProtocolGame::sendTibiaTime(int32_t time)
 end
 
 function mapController:onInit()
-    self.ui.minimapBorder.minimap:getChildById('floorUpButton'):hide()
-    self.ui.minimapBorder.minimap:getChildById('floorDownButton'):hide()
-    self.ui.minimapBorder.minimap:getChildById('zoomInButton'):hide()
-    self.ui.minimapBorder.minimap:getChildById('zoomOutButton'):hide()
-    self.ui.minimapBorder.minimap:getChildById('resetButton'):hide()
+    self.ui:setup()
+    self.ui.canDropAnywhere = true
+    self.ui.moveOnlyToMain = false
+
+    self.ui.minimapBorder = self.ui:recursiveGetChildById('minimapBorder')
+    self.ui.layersPanel = self.ui:recursiveGetChildById('layersPanel')
+    self.ui.rosePanel = self.ui:recursiveGetChildById('rosePanel')
+
+    local minimap = getMiniMapUi()
+    if minimap then
+        local floorUpBtn = minimap:getChildById('floorUpButton')
+        if floorUpBtn then floorUpBtn:hide() end
+        local floorDownBtn = minimap:getChildById('floorDownButton')
+        if floorDownBtn then floorDownBtn:hide() end
+        local zoomInBtn = minimap:getChildById('zoomInButton')
+        if zoomInBtn then zoomInBtn:hide() end
+        local zoomOutBtn = minimap:getChildById('zoomOutButton')
+        if zoomOutBtn then zoomOutBtn:hide() end
+        local resetBtn = minimap:getChildById('resetButton')
+        if resetBtn then resetBtn:hide() end
+    end
 end
 
 function mapController:onGameStart()
+    self.ui:setupOnStart()
+    g_keyboard.bindKeyDown('Alt+M', toggleMinimap)
+
     mapController:registerEvents(g_game, {
         onChangeWorldTime = onChangeWorldTime
     })
@@ -130,10 +155,15 @@ function mapController:onGameStart()
         loadFnc(minimapFile)
     end
 
-    self.ui.minimapBorder.minimap:load()
+    local minimap = getMiniMapUi()
+    if minimap then
+        minimap:load()
+    end
 end
 
 function mapController:onGameEnd()
+    g_keyboard.unbindKeyDown('Alt+M', toggleMinimap)
+
     -- Save Map
     if otmm then
         g_minimap.saveOtmm('/minimap.otmm')
@@ -141,10 +171,14 @@ function mapController:onGameEnd()
         g_map.saveOtcm('/minimap_' .. g_game.getClientVersion() .. '.otcm')
     end
 
-    self.ui.minimapBorder.minimap:save()
+    local minimap = getMiniMapUi()
+    if minimap then
+        minimap:save()
+    end
 end
 
 function mapController:onTerminate()
+    g_keyboard.unbindKeyDown('Alt+M', toggleMinimap)
     if iconTopMenu then
         iconTopMenu:destroy()
         iconTopMenu = nil
@@ -152,11 +186,17 @@ function mapController:onTerminate()
 end
 
 function zoomIn()
-    mapController.ui.minimapBorder.minimap:zoomIn()
+    local minimap = getMiniMapUi()
+    if minimap then
+        minimap:zoomIn()
+    end
 end
 
 function zoomOut()
-    mapController.ui.minimapBorder.minimap:zoomOut()
+    local minimap = getMiniMapUi()
+    if minimap then
+        minimap:zoomOut()
+    end
 end
 
 function openCyclopediaMap()
@@ -168,11 +208,11 @@ function openCyclopediaMap()
 end
 
 function fullscreen()
-    local minimapWidget = mapController.ui.minimapBorder.minimap
+    local minimapWidget = getMiniMapUi()
     if not minimapWidget then
         minimapWidget = fullscreenWidget
     end
-    local zoom;
+    local zoom
 
     if not minimapWidget then
         return
@@ -180,7 +220,12 @@ function fullscreen()
 
     if minimapWidget.fullMapView then
         fullscreenWidget = nil
-        minimapWidget:setParent(mapController.ui.minimapBorder)
+        local border = mapController.ui:recursiveGetChildById('minimapBorder')
+        if border then
+            minimapWidget:setParent(border)
+        else
+            minimapWidget:setParent(mapController.ui:getChildById('contentsPanel') or mapController.ui)
+        end
         minimapWidget:fill('parent')
         mapController.ui:show()
         zoom = minimapWidget.zoomMinimap
@@ -207,7 +252,10 @@ function upLayer()
         return
     end
 
-    mapController.ui.minimapBorder.minimap:floorUp(1)
+    local minimap = getMiniMapUi()
+    if minimap then
+        minimap:floorUp(1)
+    end
     virtualFloor = virtualFloor - 1
     refreshVirtualFloors()
 end
@@ -217,33 +265,44 @@ function downLayer()
         return
     end
 
-    mapController.ui.minimapBorder.minimap:floorDown(1)
+    local minimap = getMiniMapUi()
+    if minimap then
+        minimap:floorDown(1)
+    end
     virtualFloor = virtualFloor + 1
     refreshVirtualFloors()
 end
 
 function onClickRoseButton(dir)
+    local minimap = getMiniMapUi()
+    if not minimap then
+        return
+    end
+
     if dir == 'north' then
-        mapController.ui.minimapBorder.minimap:move(0, 1)
+        minimap:move(0, 1)
     elseif dir == 'north-east' then
-        mapController.ui.minimapBorder.minimap:move(-1, 1)
+        minimap:move(-1, 1)
     elseif dir == 'east' then
-        mapController.ui.minimapBorder.minimap:move(-1, 0)
+        minimap:move(-1, 0)
     elseif dir == 'south-east' then
-        mapController.ui.minimapBorder.minimap:move(-1, -1)
+        minimap:move(-1, -1)
     elseif dir == 'south' then
-        mapController.ui.minimapBorder.minimap:move(0, -1)
+        minimap:move(0, -1)
     elseif dir == 'south-west' then
-        mapController.ui.minimapBorder.minimap:move(1, -1)
+        minimap:move(1, -1)
     elseif dir == 'west' then
-        mapController.ui.minimapBorder.minimap:move(1, 0)
+        minimap:move(1, 0)
     elseif dir == 'north-west' then
-        mapController.ui.minimapBorder.minimap:move(1, 1)
+        minimap:move(1, 1)
     end
 end
 
 function resetMap()
-    mapController.ui.minimapBorder.minimap:reset()
+    local minimap = getMiniMapUi()
+    if minimap then
+        minimap:reset()
+    end
     local player = g_game.getLocalPlayer()
     if player then
         virtualFloor = player:getPosition().z
@@ -252,7 +311,32 @@ function resetMap()
 end
 
 function getMiniMapUi()
-    return mapController.ui.minimapBorder.minimap
+    if not mapController or not mapController.ui then
+        return nil
+    end
+    local border = mapController.ui:recursiveGetChildById('minimapBorder')
+    if border and border.minimap then
+        return border.minimap
+    end
+    return mapController.ui:recursiveGetChildById('minimap')
+end
+
+function toggleMinimap()
+    local ui = mapController and mapController.ui
+    if not ui then
+        return
+    end
+
+    if not ui:isVisible() then
+        ui:open()
+        if ui:isOn() then
+            ui:maximize()
+        end
+    elseif ui:isOn() then
+        ui:maximize()
+    else
+        ui:minimize()
+    end
 end
 
 function extendedView(extendedView)
@@ -271,22 +355,21 @@ function extendedView(extendedView)
         end
         mapController.ui:setBorderColor('alpha')
         mapController.ui:setBorderWidth(0)
-        local mainRightPanel = modules.game_interface.getMainRightPanel()
-        if not mainRightPanel:hasChild(mapController.ui) then
-            mainRightPanel:insertChild(1, mapController.ui)
+        if not mapController.ui:getParent() then
+            local mainRightPanel = modules.game_interface.getMainRightPanel()
+            if not mainRightPanel:hasChild(mapController.ui) then
+                mainRightPanel:insertChild(1, mapController.ui)
+            end
         end
         mapController.ui:show()
-
     end
-    mapController.ui.moveOnlyToMain = not extendedView
+    mapController.ui.canDropAnywhere = true
+    mapController.ui.moveOnlyToMain = false
 end
 
 function toggle()
-    if iconTopMenu:isOn() then
-        mapController.ui:hide()
-        iconTopMenu:setOn(false)
-    else
-        mapController.ui:show()
-        iconTopMenu:setOn(true)
+    toggleMinimap()
+    if iconTopMenu then
+        iconTopMenu:setOn(mapController.ui:isVisible())
     end
 end

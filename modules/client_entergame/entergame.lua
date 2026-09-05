@@ -652,15 +652,15 @@ function EnterGame.tryHttpLogin(clientVersion, httpLogin)
         end
     })
 
-    local host, path = G.host, "/"
+    local host, path = G.host, "/login"
     if G.host:find("https?://") then
         local url = G.host:gsub("https?://", "")
         host, path = url:match("([^/]+)(/.*)")
         if not host then
             host = url
-            path = "/"
-        elseif not path or path == "" then
-            path = "/"
+            path = "/login"
+        elseif not path or path == "" or path == "/" then
+            path = "/login"
         end
         local hostPort = host:match(":(%d+)$")
         if hostPort then

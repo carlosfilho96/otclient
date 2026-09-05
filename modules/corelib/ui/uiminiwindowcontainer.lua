@@ -117,8 +117,10 @@ function UIMiniWindowContainer:fits(child, minContentHeight, maxContentHeight)
 end
 
 function UIMiniWindowContainer:onDrop(widget, mousePos)
-    if (self.onlyPhantomDrop and not (widget.moveOnlyToMain)) or (widget.moveOnlyToMain and not (self.onlyPhantomDrop)) then
-        return true
+    if not (widget.canDropAnywhere) then
+        if (self.onlyPhantomDrop and not (widget.moveOnlyToMain)) or (widget.moveOnlyToMain and not (self.onlyPhantomDrop)) then
+            return true
+        end
     end
 
     if widget.UIMiniWindowContainer then

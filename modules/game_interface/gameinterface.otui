@@ -230,8 +230,9 @@ UIWidget
     anchors.right: parent.right
     anchors.top: parent.top
     &ignoreFillAll: true
-    &onlyPhantomDrop: true
-    height: 200
+    layout:
+      type: verticalBox
+      fit-children: true
     focusable: false
     on: true
 
