@@ -10,6 +10,7 @@ GameHorizontalPanel < UIMiniWindowContainer
   image-source: /images/ui/2pixel_up_frame_borderimage
   image-border: 4
   padding: 1
+  clipping: true
   focusable: false
   visible: false
   on: false

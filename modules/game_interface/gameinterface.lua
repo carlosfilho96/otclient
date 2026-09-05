@@ -490,6 +490,9 @@ function updateStretchShrink()
             modules.game_actionbar.updateVisibleWidgetsExternal()
         end)
     end
+    if updateLeftHorizontalWidth then
+        updateLeftHorizontalWidth()
+    end
 end
 
 function onMouseGrabberRelease(self, mousePosition, mouseButton)
@@ -1822,12 +1825,16 @@ local function getPanelMinHeight(panel)
     end
 
     local minContentHeight = panel:getPaddingTop() + panel:getPaddingBottom()
+    local hasVisible = false
     for _, child in ipairs(children) do
         if child:isVisible() then
+            hasVisible = true
             local childMin = child:getHeight()
-            if child.minimized then
-                childMin = child:getHeight()
-            elseif child.isResizeable and child:isResizeable() and child.getMinimumHeight then
+            local isMin = false
+            if child.isOn and child:isOn() then
+                isMin = true
+            end
+            if not isMin and child.isResizeable and child:isResizeable() and child.getMinimumHeight then
                 local h = child:getMinimumHeight()
                 if h and h > 0 then
                     childMin = h
@@ -1837,7 +1844,50 @@ local function getPanelMinHeight(panel)
         end
     end
 
-    return math.max(minContentHeight, 80)
+    if not hasVisible then
+        return 80
+    end
+
+    return math.max(minContentHeight, 20)
+end
+
+local function calculateLeftHorizontalPanelWidth()
+    if not gameLeftPanel then return 176 end
+    local isLeftExtraOn = gameLeftExtraPanel and gameLeftExtraPanel:isOn()
+    local isLeftOn = gameLeftPanel and gameLeftPanel:isOn()
+
+    if isLeftExtraOn and isLeftOn then
+        local right = gameLeftExtraPanel:getX() + gameLeftExtraPanel:getWidth()
+        local left = gameLeftPanel:getX()
+        if right > left and (right - left) >= 200 then
+            return right - left
+        end
+        local w1 = gameLeftPanel:getWidth() > 0 and gameLeftPanel:getWidth() or 176
+        local w2 = gameLeftExtraPanel:getWidth() > 0 and gameLeftExtraPanel:getWidth() or 176
+        return w1 + w2 + 1
+    elseif isLeftExtraOn then
+        local w = gameLeftExtraPanel:getWidth()
+        return w > 0 and w or 176
+    elseif isLeftOn then
+        local w = gameLeftPanel:getWidth()
+        return w > 0 and w or 176
+    end
+    return 176
+end
+
+local updatingLeftWidth = false
+function updateLeftHorizontalWidth()
+    if updatingLeftWidth then return end
+    if not gameLeftHorizontalPanel or not gameLeftPanel then return end
+    local newWidth = calculateLeftHorizontalPanelWidth()
+    if math.abs(gameLeftHorizontalPanel:getWidth() - newWidth) > 0 then
+        updatingLeftWidth = true
+        gameLeftHorizontalPanel:setWidth(newWidth)
+        if leftHorizontalResizeBorder then
+            leftHorizontalResizeBorder:setWidth(newWidth)
+        end
+        updatingLeftWidth = false
+    end
 end
 
 function updateLeftHorizontalPanelAnchors()
@@ -1866,7 +1916,7 @@ function updateLeftHorizontalPanelAnchors()
         end
     end
 
-    local width = (isLeftExtraOn and isLeftOn) and 353 or 176
+    local width = calculateLeftHorizontalPanelWidth()
 
     gameLeftHorizontalPanel:setWidth(width)
     gameLeftHorizontalPanel:breakAnchors()
@@ -1965,6 +2015,7 @@ function showLeftHorizontalPanel(show)
         gameLeftHorizontalPanel:setVisible(true)
         gameLeftHorizontalPanel:setHeight(math.max(savedHeight, minH))
         updateLeftHorizontalPanelAnchors()
+        updateLeftHorizontalWidth()
     else
         movePanel(gameLeftHorizontalPanel)
         gameLeftHorizontalPanel:setOn(false)
@@ -2013,11 +2064,19 @@ function setupHorizontalPanels()
                 g_settings.set(settingsKey, minH)
             end
 
-            local children = self:getChildren()
-            if #children == 1 and children[1]:isResizeable() and not children[1].minimized then
+            local visibleChildren = {}
+            for _, child in ipairs(self:getChildren()) do
+                if child:isVisible() then
+                    table.insert(visibleChildren, child)
+                end
+            end
+
+            if #visibleChildren == 1 and visibleChildren[1]:isResizeable() and not (visibleChildren[1].isOn and visibleChildren[1]:isOn()) then
                 local avail = self:getHeight() - (self:getPaddingTop() + self:getPaddingBottom())
-                if avail >= children[1]:getMinimumHeight() and math.abs(children[1]:getHeight() - avail) > 2 then
-                    children[1]:setHeight(avail)
+                local childMin = visibleChildren[1]:getMinimumHeight() or 80
+                local targetH = math.max(avail, childMin)
+                if math.abs(visibleChildren[1]:getHeight() - targetH) > 2 then
+                    visibleChildren[1]:setHeight(targetH)
                 end
             end
         end
@@ -2025,6 +2084,15 @@ function setupHorizontalPanels()
 
     syncChildWithPanel(gameRightHorizontalPanel, 'rightHorizontalPanelHeight')
     syncChildWithPanel(gameLeftHorizontalPanel, 'leftHorizontalPanelHeight')
+
+    gameLeftPanel.onGeometryChange = function(self)
+        updateLeftHorizontalWidth()
+    end
+    if gameLeftExtraPanel then
+        gameLeftExtraPanel.onGeometryChange = function(self)
+            updateLeftHorizontalWidth()
+        end
+    end
 
     if modules.client_options.getOption('showRightHorizontalPanel') then
         showRightHorizontalPanel(true)
