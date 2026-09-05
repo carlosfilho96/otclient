@@ -8,39 +8,15 @@ local currentLocale
 function sendLocale(localeName)
     local protocolGame = g_game.getProtocolGame()
     if protocolGame then
-        protocolGame:sendExtendedOpcode(ExtendedIds.Locale, localeName)
+        protocolGame:sendExtendedOpcode(ExtendedIds.Locale, 'en')
         return true
     end
     return false
 end
 
 function createWindow()
-    localesWindow = g_ui.displayUI('locales')
-    local localesPanel = localesWindow:getChildById('localesPanel')
-    local layout = localesPanel:getLayout()
-    local spacing = layout:getCellSpacing()
-    local size = layout:getCellSize()
-
-    local count = 0
-    for name, locale in pairs(installedLocales) do
-        local widget = g_ui.createWidget('LocalesButton', localesPanel)
-        widget:setImageSource('/images/flags/' .. name .. '')
-        widget:setText(locale.languageName)
-        widget.onClick = function()
-            selectFirstLocale(name)
-        end
-        count = count + 1
-    end
-
-    count = math.max(1, math.min(count, 3))
-    localesPanel:setWidth(size.width * count + spacing * (count - 1))
-
-    addEvent(function()
-        addEvent(function()
-            localesWindow:raise()
-            localesWindow:focus()
-        end)
-    end)
+    -- Language selection is permanently disabled; English is enforced
+    return
 end
 
 function selectFirstLocale(name)
@@ -48,21 +24,16 @@ function selectFirstLocale(name)
         localesWindow:destroy()
         localesWindow = nil
     end
-    if setLocale(name) then
-        g_modules.reloadModules()
-    end
+    setLocale('en')
 end
 
 -- hooked functions
 function onGameStart()
-    sendLocale(currentLocale.name)
+    sendLocale('en')
 end
 
 function onExtendedLocales(protocol, opcode, buffer)
-    local locale = installedLocales[buffer]
-    if locale and setLocale(locale.name) then
-        g_modules.reloadModules()
-    end
+    -- Language selection is permanently disabled; English is enforced
 end
 
 -- public functions
@@ -71,21 +42,8 @@ function init()
 
     installLocales('/locales')
 
-    local userLocaleName = g_settings.get('locale', 'false')
-    if userLocaleName ~= 'false' and setLocale(userLocaleName) then
-        pdebug('Using configured locale: ' .. userLocaleName)
-    else
-        setLocale(defaultLocaleName)
-        if g_app.hasUpdater() then
-            connect(g_app, {
-                onUpdateFinished = createWindow,
-            })
-        else
-            connect(g_app, {
-                onRun = createWindow,
-            })
-        end
-    end
+    setLocale('en')
+    g_settings.set('locale', 'en')
 
     ProtocolGame.registerExtendedOpcode(ExtendedIds.Locale, onExtendedLocales)
     connect(g_game, {
@@ -172,23 +130,13 @@ function installLocales(directory)
 end
 
 function setLocale(name)
-    local locale = installedLocales[name]
-    if locale == currentLocale then
-        g_settings.set('locale', name)
-        return
-    end
+    local locale = installedLocales['en']
     if not locale then
-        pwarning('Locale ' .. name .. ' does not exist.')
+        pwarning('Locale en does not exist.')
         return false
     end
-    if currentLocale then
-        sendLocale(locale.name)
-    end
     currentLocale = locale
-    g_settings.set('locale', name)
-    if onLocaleChanged then
-        onLocaleChanged(name)
-    end
+    g_settings.set('locale', 'en')
     return true
 end
 

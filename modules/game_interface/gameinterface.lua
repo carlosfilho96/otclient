@@ -1814,12 +1814,59 @@ function updateRightHorizontalPanelAnchors()
     end
 end
 
+local function getPanelMinHeight(panel)
+    if not panel then return 80 end
+    local children = panel:getChildren()
+    if #children == 0 then
+        return 80
+    end
+
+    local minContentHeight = panel:getPaddingTop() + panel:getPaddingBottom()
+    for _, child in ipairs(children) do
+        if child:isVisible() then
+            local childMin = child:getHeight()
+            if child.minimized then
+                childMin = child:getHeight()
+            elseif child.isResizeable and child:isResizeable() and child.getMinimumHeight then
+                local h = child:getMinimumHeight()
+                if h and h > 0 then
+                    childMin = h
+                end
+            end
+            minContentHeight = minContentHeight + childMin + child:getMarginTop() + child:getMarginBottom()
+        end
+    end
+
+    return math.max(minContentHeight, 80)
+end
+
 function updateLeftHorizontalPanelAnchors()
     if not gameLeftHorizontalPanel or not gameLeftPanel then return end
 
     local isLeftExtraOn = gameLeftExtraPanel and gameLeftExtraPanel:isOn()
-    local isHorizontalOn = gameLeftHorizontalPanel:isOn() and gameLeftHorizontalPanel:isVisible()
-    local width = isLeftExtraOn and 353 or 176
+    local isLeftOn = gameLeftPanel and gameLeftPanel:isOn()
+    local hasLeftPanels = isLeftOn or isLeftExtraOn
+    local isHorizontalOption = modules.client_options.getOption('showLeftHorizontalPanel')
+    local isHorizontalOn = isHorizontalOption and hasLeftPanels
+
+    if not hasLeftPanels then
+        if gameLeftHorizontalPanel:isVisible() or gameLeftHorizontalPanel:isOn() then
+            movePanel(gameLeftHorizontalPanel)
+            gameLeftHorizontalPanel:setOn(false)
+            gameLeftHorizontalPanel:setVisible(false)
+            if leftHorizontalResizeBorder then
+                leftHorizontalResizeBorder:setVisible(false)
+            end
+        end
+    elseif isHorizontalOption then
+        gameLeftHorizontalPanel:setOn(true)
+        gameLeftHorizontalPanel:setVisible(true)
+        if leftHorizontalResizeBorder then
+            leftHorizontalResizeBorder:setVisible(true)
+        end
+    end
+
+    local width = (isLeftExtraOn and isLeftOn) and 353 or 176
 
     gameLeftHorizontalPanel:setWidth(width)
     gameLeftHorizontalPanel:breakAnchors()
@@ -1891,9 +1938,10 @@ function showRightHorizontalPanel(show)
 
     if show then
         local savedHeight = g_settings.getNumber('rightHorizontalPanelHeight', 170)
+        local minH = getPanelMinHeight(gameRightHorizontalPanel)
         gameRightHorizontalPanel:setOn(true)
         gameRightHorizontalPanel:setVisible(true)
-        gameRightHorizontalPanel:setHeight(math.max(savedHeight, 80))
+        gameRightHorizontalPanel:setHeight(math.max(savedHeight, minH))
         updateRightHorizontalPanelAnchors()
     else
         movePanel(gameRightHorizontalPanel)
@@ -1912,9 +1960,10 @@ function showLeftHorizontalPanel(show)
             modules.client_options.setOption('showLeftPanel', true)
         end
         local savedHeight = g_settings.getNumber('leftHorizontalPanelHeight', 170)
+        local minH = getPanelMinHeight(gameLeftHorizontalPanel)
         gameLeftHorizontalPanel:setOn(true)
         gameLeftHorizontalPanel:setVisible(true)
-        gameLeftHorizontalPanel:setHeight(math.max(savedHeight, 80))
+        gameLeftHorizontalPanel:setHeight(math.max(savedHeight, minH))
         updateLeftHorizontalPanelAnchors()
     else
         movePanel(gameLeftHorizontalPanel)
@@ -1933,8 +1982,9 @@ function setupHorizontalPanels()
     if rightHorizontalResizeBorder then
         rightHorizontalResizeBorder.onMouseMove = function(self, mousePos, mouseMoved)
             if self:isPressed() and gameRightHorizontalPanel then
+                local minH = getPanelMinHeight(gameRightHorizontalPanel)
                 local delta = mousePos.y - self:getY() - self:getHeight() / 2
-                local newHeight = math.min(math.max(gameRightHorizontalPanel:getHeight() + delta, 80), 600)
+                local newHeight = math.min(math.max(gameRightHorizontalPanel:getHeight() + delta, minH), 600)
                 gameRightHorizontalPanel:setHeight(newHeight)
                 g_settings.set('rightHorizontalPanelHeight', newHeight)
                 return true
@@ -1945,8 +1995,9 @@ function setupHorizontalPanels()
     if leftHorizontalResizeBorder then
         leftHorizontalResizeBorder.onMouseMove = function(self, mousePos, mouseMoved)
             if self:isPressed() and gameLeftHorizontalPanel then
+                local minH = getPanelMinHeight(gameLeftHorizontalPanel)
                 local delta = mousePos.y - self:getY() - self:getHeight() / 2
-                local newHeight = math.min(math.max(gameLeftHorizontalPanel:getHeight() + delta, 80), 600)
+                local newHeight = math.min(math.max(gameLeftHorizontalPanel:getHeight() + delta, minH), 600)
                 gameLeftHorizontalPanel:setHeight(newHeight)
                 g_settings.set('leftHorizontalPanelHeight', newHeight)
                 return true
@@ -1956,6 +2007,12 @@ function setupHorizontalPanels()
 
     local function syncChildWithPanel(panel, settingsKey)
         panel.onGeometryChange = function(self)
+            local minH = getPanelMinHeight(self)
+            if self:getHeight() < minH then
+                self:setHeight(minH)
+                g_settings.set(settingsKey, minH)
+            end
+
             local children = self:getChildren()
             if #children == 1 and children[1]:isResizeable() and not children[1].minimized then
                 local avail = self:getHeight() - (self:getPaddingTop() + self:getPaddingBottom())
