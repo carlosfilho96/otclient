@@ -274,6 +274,16 @@ function onGameStart()
     show()
     updateSidePanelButtons()
     applyMobileMargins()
+    if modules.client_options.getOption('showRightHorizontalPanel') then
+        showRightHorizontalPanel(true)
+    else
+        updateRightHorizontalPanelAnchors()
+    end
+    if modules.client_options.getOption('showLeftHorizontalPanel') then
+        showLeftHorizontalPanel(true)
+    else
+        updateLeftHorizontalPanelAnchors()
+    end
 end
 
 function onGameEnd()
@@ -1761,21 +1771,18 @@ function updateRightHorizontalPanelAnchors()
 
     local isRightExtraOn = gameRightExtraPanel and gameRightExtraPanel:isOn()
     local isHorizontalOn = gameRightHorizontalPanel:isOn() and gameRightHorizontalPanel:isVisible()
+    local width = isRightExtraOn and 353 or 176
 
+    gameRightHorizontalPanel:setWidth(width)
     gameRightHorizontalPanel:breakAnchors()
     gameRightHorizontalPanel:addAnchor(AnchorTop, 'parent', AnchorTop)
     gameRightHorizontalPanel:addAnchor(AnchorRight, 'parent', AnchorRight)
-    if isRightExtraOn then
-        gameRightHorizontalPanel:addAnchor(AnchorLeft, 'gameRightExtraPanel', AnchorLeft)
-    else
-        gameRightHorizontalPanel:addAnchor(AnchorLeft, 'gameRightPanel', AnchorLeft)
-    end
 
     if rightHorizontalResizeBorder then
+        rightHorizontalResizeBorder:setWidth(width)
         rightHorizontalResizeBorder:breakAnchors()
         rightHorizontalResizeBorder:addAnchor(AnchorTop, 'gameRightHorizontalPanel', AnchorBottom)
-        rightHorizontalResizeBorder:addAnchor(AnchorLeft, 'gameRightHorizontalPanel', AnchorLeft)
-        rightHorizontalResizeBorder:addAnchor(AnchorRight, 'gameRightHorizontalPanel', AnchorRight)
+        rightHorizontalResizeBorder:addAnchor(AnchorRight, 'parent', AnchorRight)
         rightHorizontalResizeBorder:setVisible(isHorizontalOn)
     end
 
@@ -1790,6 +1797,7 @@ function updateRightHorizontalPanelAnchors()
             gameRightExtraPanel:addAnchor(AnchorRight, 'gameRightPanel', AnchorLeft)
             gameRightExtraPanel:addAnchor(AnchorTop, bottomTarget:getId(), AnchorBottom)
             gameRightExtraPanel:addAnchor(AnchorBottom, 'parent', AnchorBottom)
+            gameRightExtraPanel:setMarginRight(1)
         end
     else
         gameMainRightPanel:breakAnchors()
@@ -1801,6 +1809,7 @@ function updateRightHorizontalPanelAnchors()
             gameRightExtraPanel:addAnchor(AnchorRight, 'gameRightPanel', AnchorLeft)
             gameRightExtraPanel:addAnchor(AnchorTop, 'parent', AnchorTop)
             gameRightExtraPanel:addAnchor(AnchorBottom, 'parent', AnchorBottom)
+            gameRightExtraPanel:setMarginRight(1)
         end
     end
 end
@@ -1809,23 +1818,19 @@ function updateLeftHorizontalPanelAnchors()
     if not gameLeftHorizontalPanel or not gameLeftPanel then return end
 
     local isLeftExtraOn = gameLeftExtraPanel and gameLeftExtraPanel:isOn()
-    local isLeftOn = gameLeftPanel:isOn()
     local isHorizontalOn = gameLeftHorizontalPanel:isOn() and gameLeftHorizontalPanel:isVisible()
+    local width = isLeftExtraOn and 353 or 176
 
+    gameLeftHorizontalPanel:setWidth(width)
     gameLeftHorizontalPanel:breakAnchors()
     gameLeftHorizontalPanel:addAnchor(AnchorTop, 'parent', AnchorTop)
     gameLeftHorizontalPanel:addAnchor(AnchorLeft, 'parent', AnchorLeft)
-    if isLeftExtraOn then
-        gameLeftHorizontalPanel:addAnchor(AnchorRight, 'gameLeftExtraPanel', AnchorRight)
-    else
-        gameLeftHorizontalPanel:addAnchor(AnchorRight, 'gameLeftPanel', AnchorRight)
-    end
 
     if leftHorizontalResizeBorder then
+        leftHorizontalResizeBorder:setWidth(width)
         leftHorizontalResizeBorder:breakAnchors()
         leftHorizontalResizeBorder:addAnchor(AnchorTop, 'gameLeftHorizontalPanel', AnchorBottom)
-        leftHorizontalResizeBorder:addAnchor(AnchorLeft, 'gameLeftHorizontalPanel', AnchorLeft)
-        leftHorizontalResizeBorder:addAnchor(AnchorRight, 'gameLeftHorizontalPanel', AnchorRight)
+        leftHorizontalResizeBorder:addAnchor(AnchorLeft, 'parent', AnchorLeft)
         leftHorizontalResizeBorder:setVisible(isHorizontalOn)
     end
 
@@ -1841,6 +1846,7 @@ function updateLeftHorizontalPanelAnchors()
             gameLeftExtraPanel:addAnchor(AnchorLeft, 'gameLeftPanel', AnchorRight)
             gameLeftExtraPanel:addAnchor(AnchorTop, bottomTarget:getId(), AnchorBottom)
             gameLeftExtraPanel:addAnchor(AnchorBottom, 'parent', AnchorBottom)
+            gameLeftExtraPanel:setMarginLeft(1)
         end
     else
         gameLeftPanel:breakAnchors()
@@ -1853,6 +1859,7 @@ function updateLeftHorizontalPanelAnchors()
             gameLeftExtraPanel:addAnchor(AnchorLeft, 'gameLeftPanel', AnchorRight)
             gameLeftExtraPanel:addAnchor(AnchorTop, 'parent', AnchorTop)
             gameLeftExtraPanel:addAnchor(AnchorBottom, 'parent', AnchorBottom)
+            gameLeftExtraPanel:setMarginLeft(1)
         end
     end
 end
@@ -1863,8 +1870,12 @@ local function movePanel(mainpanel)
             local panel = modules.game_interface.findContentPanelAvailable(widget, widget:getMinimumHeight())
             if panel then
                 if not panel:hasChild(widget) then
+                    local wasVisible = widget:isVisible()
                     widget:close()
                     panel:addChild(widget)
+                    if wasVisible and widget.open then
+                        widget:open()
+                    end
                 else
                     print("Error: Attempt to add a widget that already exists in the target panel")
                 end
@@ -1880,14 +1891,15 @@ function showRightHorizontalPanel(show)
 
     if show then
         local savedHeight = g_settings.getNumber('rightHorizontalPanelHeight', 170)
-        gameRightHorizontalPanel:setHeight(math.max(savedHeight, 80))
         gameRightHorizontalPanel:setOn(true)
         gameRightHorizontalPanel:setVisible(true)
+        gameRightHorizontalPanel:setHeight(math.max(savedHeight, 80))
         updateRightHorizontalPanelAnchors()
     else
         movePanel(gameRightHorizontalPanel)
         gameRightHorizontalPanel:setOn(false)
         gameRightHorizontalPanel:setVisible(false)
+        gameRightHorizontalPanel:setHeight(0)
         updateRightHorizontalPanelAnchors()
     end
 end
@@ -1900,14 +1912,15 @@ function showLeftHorizontalPanel(show)
             modules.client_options.setOption('showLeftPanel', true)
         end
         local savedHeight = g_settings.getNumber('leftHorizontalPanelHeight', 170)
-        gameLeftHorizontalPanel:setHeight(math.max(savedHeight, 80))
         gameLeftHorizontalPanel:setOn(true)
         gameLeftHorizontalPanel:setVisible(true)
+        gameLeftHorizontalPanel:setHeight(math.max(savedHeight, 80))
         updateLeftHorizontalPanelAnchors()
     else
         movePanel(gameLeftHorizontalPanel)
         gameLeftHorizontalPanel:setOn(false)
         gameLeftHorizontalPanel:setVisible(false)
+        gameLeftHorizontalPanel:setHeight(0)
         updateLeftHorizontalPanelAnchors()
     end
 end
@@ -1944,7 +1957,7 @@ function setupHorizontalPanels()
     local function syncChildWithPanel(panel, settingsKey)
         panel.onGeometryChange = function(self)
             local children = self:getChildren()
-            if #children == 1 and children[1]:isResizeable() then
+            if #children == 1 and children[1]:isResizeable() and not children[1].minimized then
                 local avail = self:getHeight() - (self:getPaddingTop() + self:getPaddingBottom())
                 if avail >= children[1]:getMinimumHeight() and math.abs(children[1]:getHeight() - avail) > 2 then
                     children[1]:setHeight(avail)

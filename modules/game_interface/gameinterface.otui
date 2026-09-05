@@ -16,6 +16,8 @@ GameHorizontalPanel < UIMiniWindowContainer
   &ignoreFillAll: true
   layout:
     type: verticalBox
+  $on:
+    visible: true
   $!on:
     height: 0
     visible: false
@@ -218,15 +220,19 @@ UIWidget
     id: gameLeftHorizontalPanel
     anchors.left: parent.left
     anchors.top: parent.top
-    anchors.right: gameLeftPanel.right
+    width: 176
     height: 170
+    visible: false
+    on: false
 
-  ResizeBorder
+  Splitter
     id: leftHorizontalResizeBorder
     anchors.top: gameLeftHorizontalPanel.bottom
-    anchors.left: gameLeftHorizontalPanel.left
-    anchors.right: gameLeftHorizontalPanel.right
-    height: 5
+    anchors.left: parent.left
+    width: 176
+    height: 6
+    image-source: /images/ui/actionbar/splitterActBottom
+    opacity: 1
     visible: false
 
   GameSidePanel
@@ -258,15 +264,19 @@ UIWidget
     id: gameRightHorizontalPanel
     anchors.right: parent.right
     anchors.top: parent.top
-    anchors.left: gameRightPanel.left
+    width: 176
     height: 170
+    visible: false
+    on: false
 
-  ResizeBorder
+  Splitter
     id: rightHorizontalResizeBorder
     anchors.top: gameRightHorizontalPanel.bottom
-    anchors.left: gameRightHorizontalPanel.left
-    anchors.right: gameRightHorizontalPanel.right
-    height: 5
+    anchors.right: parent.right
+    width: 176
+    height: 6
+    image-source: /images/ui/actionbar/splitterActBottom
+    opacity: 1
     visible: false
 
   GameSidePanel
