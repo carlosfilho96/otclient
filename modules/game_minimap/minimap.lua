@@ -106,6 +106,26 @@ function mapController:onInit()
     self.ui.canDropAnywhere = true
     self.ui.moveOnlyToMain = false
 
+    self.ui.onGeometryChange = function(widget, newRect, oldRect)
+        local parent = widget:getParent()
+        if not parent then return end
+        local rPanel = modules.game_interface.getRightHorizontalPanel()
+        local lPanel = modules.game_interface.getLeftHorizontalPanel()
+        if parent == rPanel then
+            local desired = widget:getHeight() + rPanel:getPaddingTop() + rPanel:getPaddingBottom()
+            if math.abs(rPanel:getHeight() - desired) > 2 then
+                rPanel:setHeight(desired)
+                g_settings.set('rightHorizontalPanelHeight', desired)
+            end
+        elseif parent == lPanel then
+            local desired = widget:getHeight() + lPanel:getPaddingTop() + lPanel:getPaddingBottom()
+            if math.abs(lPanel:getHeight() - desired) > 2 then
+                lPanel:setHeight(desired)
+                g_settings.set('leftHorizontalPanelHeight', desired)
+            end
+        end
+    end
+
     self.ui.minimapBorder = self.ui:recursiveGetChildById('minimapBorder')
     self.ui.layersPanel = self.ui:recursiveGetChildById('layersPanel')
     self.ui.rosePanel = self.ui:recursiveGetChildById('rosePanel')

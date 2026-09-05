@@ -6,6 +6,20 @@ GameSidePanel < UIMiniWindowContainer
     type: verticalBox
     //spacing: 1
 
+GameHorizontalPanel < UIMiniWindowContainer
+  image-source: /images/ui/2pixel_up_frame_borderimage
+  image-border: 4
+  padding: 1
+  focusable: false
+  visible: false
+  on: false
+  &ignoreFillAll: true
+  layout:
+    type: verticalBox
+  $!on:
+    height: 0
+    visible: false
+
 SelectColumnButton < CheckBox
   visible: false
   opacity: 0.3
@@ -200,6 +214,21 @@ UIWidget
     anchors.top: gameBottomCooldownPanel.bottom
     anchors.bottom: parent.bottom
 
+  GameHorizontalPanel
+    id: gameLeftHorizontalPanel
+    anchors.left: parent.left
+    anchors.top: parent.top
+    anchors.right: gameLeftPanel.right
+    height: 170
+
+  ResizeBorder
+    id: leftHorizontalResizeBorder
+    anchors.top: gameLeftHorizontalPanel.bottom
+    anchors.left: gameLeftHorizontalPanel.left
+    anchors.right: gameLeftHorizontalPanel.right
+    height: 5
+    visible: false
+
   GameSidePanel
     id: gameLeftPanel
     anchors.left: parent.left
@@ -224,6 +253,21 @@ UIWidget
     $!on:
       width: 0
       visible: false
+
+  GameHorizontalPanel
+    id: gameRightHorizontalPanel
+    anchors.right: parent.right
+    anchors.top: parent.top
+    anchors.left: gameRightPanel.left
+    height: 170
+
+  ResizeBorder
+    id: rightHorizontalResizeBorder
+    anchors.top: gameRightHorizontalPanel.bottom
+    anchors.left: gameRightHorizontalPanel.left
+    anchors.right: gameRightHorizontalPanel.right
+    height: 5
+    visible: false
 
   GameSidePanel
     id: gameMainRightPanel

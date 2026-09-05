@@ -524,6 +524,7 @@ return {
         value = false,
         action = function(value, options, controller, panels, extraWidgets)
             modules.game_interface.getLeftExtraPanel():setOn(value)
+            modules.game_interface.updateLeftHorizontalPanelAnchors()
             -- Update action bars when left extra panel visibility changes
             if modules.game_actionbar and modules.game_actionbar.updateVisibleWidgetsExternal then
                 addEvent(function()
@@ -536,6 +537,7 @@ return {
         value = true,
         action = function(value, options, controller, panels, extraWidgets)
             modules.game_interface.getLeftPanel():setOn(value)
+            modules.game_interface.updateLeftHorizontalPanelAnchors()
             -- Update action bars when left panel visibility changes
             if modules.game_actionbar and modules.game_actionbar.updateVisibleWidgetsExternal then
                 addEvent(function()
@@ -548,12 +550,25 @@ return {
         value = false,
         action = function(value, options, controller, panels, extraWidgets)
             modules.game_interface.getRightExtraPanel():setOn(value)
+            modules.game_interface.updateRightHorizontalPanelAnchors()
             -- Update action bars when right extra panel visibility changes
             if modules.game_actionbar and modules.game_actionbar.updateVisibleWidgetsExternal then
                 addEvent(function()
                     modules.game_actionbar.updateVisibleWidgetsExternal()
                 end)
             end
+        end
+    },
+    showLeftHorizontalPanel           = {
+        value = false,
+        action = function(value, options, controller, panels, extraWidgets)
+            modules.game_interface.showLeftHorizontalPanel(value)
+        end
+    },
+    showRightHorizontalPanel          = {
+        value = false,
+        action = function(value, options, controller, panels, extraWidgets)
+            modules.game_interface.showRightHorizontalPanel(value)
         end
     },
     showSpellGroupCooldowns           = {

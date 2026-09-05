@@ -414,6 +414,7 @@ locale = {
     ["Show Text"] = "Mostrar texto",
     ["Show Top Menu"] = "Mostrar Menu Superior",
     ["Show all items"] = "Exibir todos os itens",
+    ["Show an extra left panel"] = "Mostrar uma barra lateral esquerda extra",
     ["Show an extra right panel"] = "Mostrar uma barra lateral direita extra",
     ["Show Right Horizontal Panel"] = "Mostrar painel horizontal direito",
     ["Show Left Horizontal Panel"] = "Mostrar painel horizontal esquerdo",
