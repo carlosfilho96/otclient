@@ -5,15 +5,6 @@ MiniWindow
   &save: true
   &canDropAnywhere: true
 
-  UIWidget
-    id: miniwindowIcon
-    anchors.top: miniwindowHeader.top
-    anchors.left: miniwindowHeader.left
-    margin-top: 2
-    margin-left: 4
-    image-source: /images/topbuttons/minimap
-    image-rect: 0 0 12 12
-    image-smooth: false
 
   Label
     id: miniwindowTitle

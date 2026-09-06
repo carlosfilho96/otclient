@@ -14,7 +14,10 @@ panelsList = {}
 panelsRadioGroup = nil
 -- Ordered list of all currently visible left panels (gameLeftPanel, gameLeftExtraPanel, dynamic...)
 leftPanelList = {}
+-- Ordered list of all currently visible right panels (gameRightPanel, gameRightExtraPanel, dynamic...)
+rightPanelList = {}
 local dynamicLeftPanelIdCounter = 0
+local dynamicRightPanelIdCounter = 0
 gameTopPanel = nil
 gameBottomStatsBarPanel = nil
 gameBottomPanel = nil
@@ -55,7 +58,7 @@ local mobileConfig = {
 }
 local isExtendedViewActive = false
 
-local MIN_MAP_WIDTH = 300  -- minimum game map width before denying new left panels
+local MIN_MAP_WIDTH = 300  -- minimum game map width before denying new side panels
 
 local function canAddLeftPanel()
     if #leftPanelList == 0 then
@@ -65,19 +68,29 @@ local function canAddLeftPanel()
     return (mapWidth >= 177 + MIN_MAP_WIDTH)
 end
 
+local function canAddRightPanel()
+    local mapWidth = gameMapPanel and gameMapPanel:getWidth() or 0
+    return (mapWidth >= 177 + MIN_MAP_WIDTH)
+end
+
 local function updateSidePanelButtons()
     if not leftIncreaseSidePanels or not leftDecreaseSidePanels then return end
-    local hasAny = #leftPanelList > 0
-    local canAdd = canAddLeftPanel()
+    local hasAnyLeft = #leftPanelList > 0
+    local canAddLeft = canAddLeftPanel()
+    local canAddRight = canAddRightPanel()
+    local canDecreaseRight = #rightPanelList > 1  -- right side must always have at least 1 panel
+
     if g_platform.isMobile() then
         leftIncreaseSidePanels:setEnabled(false)
         leftDecreaseSidePanels:setEnabled(false)
+        if rightIncreaseSidePanels then rightIncreaseSidePanels:setEnabled(false) end
+        if rightDecreaseSidePanels then rightDecreaseSidePanels:setEnabled(false) end
     else
-        leftIncreaseSidePanels:setEnabled(canAdd)
-        leftDecreaseSidePanels:setEnabled(hasAny)
+        leftIncreaseSidePanels:setEnabled(canAddLeft)
+        leftDecreaseSidePanels:setEnabled(hasAnyLeft)
+        if rightIncreaseSidePanels then rightIncreaseSidePanels:setEnabled(canAddRight) end
+        if rightDecreaseSidePanels then rightDecreaseSidePanels:setEnabled(canDecreaseRight) end
     end
-    rightIncreaseSidePanels:setEnabled(not modules.client_options.getOption('showRightExtraPanel'))
-    rightDecreaseSidePanels:setEnabled(modules.client_options.getOption('showRightExtraPanel'))
 end
 
 local function applyMobileMargins()
@@ -507,6 +520,9 @@ function updateStretchShrink()
     end
     if updateLeftHorizontalWidth then
         updateLeftHorizontalWidth()
+    end
+    if updateRightHorizontalWidth then
+        updateRightHorizontalWidth()
     end
     if updateSidePanelButtons then
         updateSidePanelButtons()
@@ -1787,12 +1803,173 @@ function getLeftHorizontalResizeBorder()
     return leftHorizontalResizeBorder
 end
 
-function updateRightHorizontalPanelAnchors()
-    if not gameRightHorizontalPanel or not gameMainRightPanel or not gameRightPanel then return end
+local function calculateRightHorizontalPanelWidth()
+    if #rightPanelList == 0 then return 176 end
+    local firstPanel = rightPanelList[1]
+    local lastPanel = rightPanelList[#rightPanelList]
+    local right = firstPanel:getX() + firstPanel:getWidth()
+    local left = lastPanel:getX()
+    if right > left and (right - left) >= (#rightPanelList * 170) then
+        return right - left
+    end
+    return #rightPanelList * 176 + math.max(0, #rightPanelList - 1)
+end
 
-    local isRightExtraOn = gameRightExtraPanel and gameRightExtraPanel:isOn()
-    local isHorizontalOn = gameRightHorizontalPanel:isOn() and gameRightHorizontalPanel:isVisible()
-    local width = isRightExtraOn and 353 or 176
+local function updateRightPanelLayout()
+    if not gameRightPanel or not gameMainRightPanel then return end
+
+    local horizontalBottom = nil
+    if gameRightHorizontalPanel and gameRightHorizontalPanel:isVisible() then
+        horizontalBottom = rightHorizontalResizeBorder or gameRightHorizontalPanel
+    end
+
+    gameMainRightPanel:breakAnchors()
+    gameMainRightPanel:addAnchor(AnchorRight, 'parent', AnchorRight)
+    if horizontalBottom then
+        gameMainRightPanel:addAnchor(AnchorTop, horizontalBottom:getId(), AnchorBottom)
+    else
+        gameMainRightPanel:addAnchor(AnchorTop, 'parent', AnchorTop)
+    end
+
+    gameRightPanel:breakAnchors()
+    gameRightPanel:addAnchor(AnchorRight, 'parent', AnchorRight)
+    gameRightPanel:addAnchor(AnchorTop, 'gameMainRightPanel', AnchorBottom)
+    gameRightPanel:addAnchor(AnchorBottom, 'parent', AnchorBottom)
+
+    local prevPanel = gameRightPanel
+    for i = 2, #rightPanelList do
+        local panel = rightPanelList[i]
+        panel:breakAnchors()
+        panel:addAnchor(AnchorRight, prevPanel:getId(), AnchorLeft)
+        if horizontalBottom then
+            panel:addAnchor(AnchorTop, horizontalBottom:getId(), AnchorBottom)
+        else
+            panel:addAnchor(AnchorTop, 'parent', AnchorTop)
+        end
+        panel:addAnchor(AnchorBottom, 'parent', AnchorBottom)
+        panel:setMarginRight(1)
+        prevPanel = panel
+    end
+
+    local leftmost = rightPanelList[#rightPanelList] or gameRightPanel
+    local targetId = leftmost:getId()
+    local targetEdge = AnchorLeft
+
+    if gameRightActionPanel then
+        gameRightActionPanel:breakAnchors()
+        gameRightActionPanel:addAnchor(AnchorRight, targetId, targetEdge)
+        if gameTopPanel then
+            gameRightActionPanel:addAnchor(AnchorTop, 'gameTopPanel', AnchorBottom)
+        else
+            gameRightActionPanel:addAnchor(AnchorTop, 'parent', AnchorTop)
+        end
+        if bottomSplitter then
+            gameRightActionPanel:addAnchor(AnchorBottom, 'bottomSplitter', AnchorTop)
+        else
+            gameRightActionPanel:addAnchor(AnchorBottom, 'parent', AnchorBottom)
+        end
+    end
+
+    if bottomSplitter then
+        bottomSplitter:breakAnchors()
+        local leftTarget = leftPanelList[#leftPanelList]
+        if leftTarget then
+            bottomSplitter:addAnchor(AnchorLeft, leftTarget:getId(), AnchorRight)
+        else
+            bottomSplitter:addAnchor(AnchorLeft, 'parent', AnchorLeft)
+        end
+        bottomSplitter:addAnchor(AnchorRight, targetId, targetEdge)
+        bottomSplitter:addAnchor(AnchorBottom, 'parent', AnchorBottom)
+    end
+
+    if gameTopPanel then
+        gameTopPanel:breakAnchors()
+        local leftTarget = leftPanelList[#leftPanelList]
+        if leftTarget then
+            gameTopPanel:addAnchor(AnchorLeft, leftTarget:getId(), AnchorRight)
+        else
+            gameTopPanel:addAnchor(AnchorLeft, 'parent', AnchorLeft)
+        end
+        gameTopPanel:addAnchor(AnchorRight, targetId, targetEdge)
+        gameTopPanel:addAnchor(AnchorTop, 'parent', AnchorTop)
+    end
+
+    if gameBottomStatsBarPanel then
+        gameBottomStatsBarPanel:breakAnchors()
+        local leftTarget = leftPanelList[#leftPanelList]
+        if leftTarget then
+            gameBottomStatsBarPanel:addAnchor(AnchorLeft, leftTarget:getId(), AnchorRight)
+        else
+            gameBottomStatsBarPanel:addAnchor(AnchorLeft, 'parent', AnchorLeft)
+        end
+        gameBottomStatsBarPanel:addAnchor(AnchorRight, targetId, targetEdge)
+        if bottomSplitter then
+            gameBottomStatsBarPanel:addAnchor(AnchorTop, 'bottomSplitter', AnchorBottom)
+        else
+            gameBottomStatsBarPanel:addAnchor(AnchorTop, 'parent', AnchorTop)
+        end
+    end
+
+    if rightIncreaseSidePanels then
+        rightIncreaseSidePanels:breakAnchors()
+        rightIncreaseSidePanels:addAnchor(AnchorRight, targetId, targetEdge)
+        rightIncreaseSidePanels:addAnchor(AnchorTop, 'parent', AnchorTop)
+    end
+
+    if gameBottomPanel and not g_platform.isMobile() then
+        gameBottomPanel:breakAnchors()
+        local leftTarget = leftPanelList[#leftPanelList]
+        if leftTarget then
+            gameBottomPanel:addAnchor(AnchorLeft, leftTarget:getId(), AnchorRight)
+        else
+            gameBottomPanel:addAnchor(AnchorLeft, 'parent', AnchorLeft)
+        end
+        gameBottomPanel:addAnchor(AnchorRight, targetId, targetEdge)
+        local bottomCooldown = gameRootPanel:getChildById('gameBottomCooldownPanel')
+        if bottomCooldown then
+            gameBottomPanel:addAnchor(AnchorTop, 'gameBottomCooldownPanel', AnchorBottom)
+        end
+        gameBottomPanel:addAnchor(AnchorBottom, 'parent', AnchorBottom)
+    end
+
+    updateSidePanelButtons()
+end
+
+local updatingRightWidth = false
+local updatingRightAnchors = false
+function updateRightHorizontalWidth()
+    if updatingRightWidth then return end
+    if not gameRightHorizontalPanel then return end
+    local newWidth = calculateRightHorizontalPanelWidth()
+    if math.abs(gameRightHorizontalPanel:getWidth() - newWidth) > 0 then
+        updatingRightWidth = true
+        gameRightHorizontalPanel:setWidth(newWidth)
+        if rightHorizontalResizeBorder then
+            rightHorizontalResizeBorder:setWidth(newWidth)
+        end
+        updatingRightWidth = false
+    end
+
+    if not updatingRightAnchors then
+        local hasRightPanels = #rightPanelList > 0
+        local isHorizontalOption = modules.client_options and modules.client_options.getOption('showRightHorizontalPanel')
+        local panelVisible = gameRightHorizontalPanel:isVisible()
+        if (not hasRightPanels and panelVisible) or (hasRightPanels and isHorizontalOption and not panelVisible) then
+            updateRightHorizontalPanelAnchors()
+        end
+    end
+end
+
+function updateRightHorizontalPanelAnchors()
+    if updatingRightAnchors then return end
+    if not gameRightHorizontalPanel or not gameRightPanel then return end
+    updatingRightAnchors = true
+
+    local hasRightPanels = #rightPanelList > 0
+    local isHorizontalOption = modules.client_options.getOption('showRightHorizontalPanel')
+    local isHorizontalOn = isHorizontalOption and hasRightPanels
+
+    local width = calculateRightHorizontalPanelWidth()
 
     gameRightHorizontalPanel:setWidth(width)
     gameRightHorizontalPanel:breakAnchors()
@@ -1807,32 +1984,8 @@ function updateRightHorizontalPanelAnchors()
         rightHorizontalResizeBorder:setVisible(isHorizontalOn)
     end
 
-    if isHorizontalOn then
-        local bottomTarget = rightHorizontalResizeBorder or gameRightHorizontalPanel
-        gameMainRightPanel:breakAnchors()
-        gameMainRightPanel:addAnchor(AnchorRight, 'parent', AnchorRight)
-        gameMainRightPanel:addAnchor(AnchorTop, bottomTarget:getId(), AnchorBottom)
-
-        if gameRightExtraPanel then
-            gameRightExtraPanel:breakAnchors()
-            gameRightExtraPanel:addAnchor(AnchorRight, 'gameRightPanel', AnchorLeft)
-            gameRightExtraPanel:addAnchor(AnchorTop, bottomTarget:getId(), AnchorBottom)
-            gameRightExtraPanel:addAnchor(AnchorBottom, 'parent', AnchorBottom)
-            gameRightExtraPanel:setMarginRight(1)
-        end
-    else
-        gameMainRightPanel:breakAnchors()
-        gameMainRightPanel:addAnchor(AnchorRight, 'parent', AnchorRight)
-        gameMainRightPanel:addAnchor(AnchorTop, 'parent', AnchorTop)
-
-        if gameRightExtraPanel then
-            gameRightExtraPanel:breakAnchors()
-            gameRightExtraPanel:addAnchor(AnchorRight, 'gameRightPanel', AnchorLeft)
-            gameRightExtraPanel:addAnchor(AnchorTop, 'parent', AnchorTop)
-            gameRightExtraPanel:addAnchor(AnchorBottom, 'parent', AnchorBottom)
-            gameRightExtraPanel:setMarginRight(1)
-        end
-    end
+    updateRightPanelLayout()
+    updatingRightAnchors = false
 end
 
 local function getPanelMinHeight(panel)
@@ -2272,7 +2425,65 @@ function setupHorizontalPanels()
         updateSidePanelButtons()
     end
 
+    gameRightPanel.onGeometryChange = function(self)
+        updateRightHorizontalWidth()
+    end
+    if gameRightExtraPanel then
+        gameRightExtraPanel.onGeometryChange = function(self)
+            updateRightHorizontalWidth()
+        end
+    end
+
+    local function initRightPanels()
+        rightPanelList = { gameRightPanel }
+        local savedCount = g_settings.getNumber('rightPanelCount', -1)
+        if savedCount < 0 then
+            -- Initial migration: check old options or default to 1 panel
+            if modules.client_options.getOption('showRightExtraPanel') then
+                savedCount = 2
+            else
+                savedCount = 1
+            end
+        end
+        savedCount = math.max(1, savedCount) -- right side must always have at least 1 panel
+
+        if savedCount >= 2 and gameRightExtraPanel then
+            gameRightExtraPanel:setOn(true)
+            gameRightExtraPanel:setVisible(true)
+            gameRightExtraPanel:setWidth(176)
+            table.insert(rightPanelList, gameRightExtraPanel)
+        elseif gameRightExtraPanel then
+            gameRightExtraPanel:setOn(false)
+            gameRightExtraPanel:setVisible(false)
+            gameRightExtraPanel:setWidth(0)
+        end
+
+        if savedCount >= 3 then
+            for i = 3, savedCount do
+                local newId = 'gameRightPanel_' .. i
+                local panel = g_ui.createWidget('GameSidePanel', gameRootPanel)
+                panel:setId(newId)
+                panel:setFocusable(false)
+                panel:setOn(true)
+                panel:setVisible(true)
+                panel:setWidth(176)
+                panel.onClick = toggleInternalFocus
+                panel.onGeometryChange = function(self)
+                    updateRightHorizontalWidth()
+                end
+                table.insert(panelsList, { panel = panel })
+                table.insert(rightPanelList, panel)
+            end
+        end
+
+        updateRightPanelLayout()
+        updateRightHorizontalWidth()
+        updateRightHorizontalPanelAnchors()
+        updateSidePanelButtons()
+    end
+
     initLeftPanels()
+    initRightPanels()
 
     if modules.client_options.getOption('showRightHorizontalPanel') then
         showRightHorizontalPanel(true)
@@ -2326,15 +2537,20 @@ function setupViewMode(mode)
             gameLeftExtraPanel:setOn(false)
             gameLeftExtraPanel:setVisible(false)
         end
-        gameRightExtraPanel:setOn(modules.client_options.getOption('showRightExtraPanel'))
+        for _, panel in ipairs(rightPanelList) do
+            panel:setOn(true)
+            panel:setVisible(true)
+            panel:setImageColor('white')
+            panel:setMarginTop(0)
+        end
+        if #rightPanelList < 2 and gameRightExtraPanel then
+            gameRightExtraPanel:setOn(false)
+            gameRightExtraPanel:setVisible(false)
+        end
         gameLeftPanel:setMarginTop(0)
-        gameRightPanel:setMarginTop(0)
-        gameRightExtraPanel:setMarginTop(0)
         if gameLeftExtraPanel then
             gameLeftExtraPanel:setMarginTop(0)
         end
-        gameRightPanel:setImageColor('white')
-        gameRightExtraPanel:setImageColor('white')
         gameBottomPanel:setImageColor('white')
         updateRightHorizontalPanelAnchors()
         updateLeftHorizontalPanelAnchors()
@@ -2367,14 +2583,17 @@ function setupViewMode(mode)
         gameMapPanel:fill('parent')
         gameRootPanel:fill('parent')
         gameLeftPanel:setImageColor('alpha')
-        gameRightPanel:setImageColor('alpha')
-        gameRightExtraPanel:setImageColor('alpha')
+        for _, panel in ipairs(rightPanelList) do
+            panel:setImageColor('alpha')
+        end
         gameLeftExtraPanel:setImageColor('alpha')
         gameLeftPanel:setOn(true)
         gameLeftPanel:setVisible(true)
         gameRightPanel:setOn(true)
-        gameRightExtraPanel:setOn(false)
-        gameRightExtraPanel:setVisible(false)
+        for i = 2, #rightPanelList do
+            rightPanelList[i]:setOn(false)
+            rightPanelList[i]:setVisible(false)
+        end
         gameLeftExtraPanel:setOn(false)
         gameLeftExtraPanel:setVisible(false)
         if gameRightHorizontalPanel then
@@ -2496,11 +2715,42 @@ function onDecreaseLeftPanels()
 end
 
 function onIncreaseRightPanels()
-    rightIncreaseSidePanels:setEnabled(false)
-    rightDecreaseSidePanels:setEnabled(true)
-    modules.client_options.setOption('showRightExtraPanel', true)
+    if not canAddRightPanel() then
+        updateSidePanelButtons()
+        return
+    end
+
+    local nextIndex = #rightPanelList + 1
+    local panel = nil
+
+    if nextIndex == 2 then
+        panel = gameRightExtraPanel
+        panel:setOn(true)
+        panel:setVisible(true)
+        panel:setWidth(176)
+        table.insert(rightPanelList, panel)
+    else
+        local newId = 'gameRightPanel_' .. nextIndex
+        panel = g_ui.createWidget('GameSidePanel', gameRootPanel)
+        panel:setId(newId)
+        panel:setFocusable(false)
+        panel:setOn(true)
+        panel:setVisible(true)
+        panel:setWidth(176)
+        panel.onClick = toggleInternalFocus
+        panel.onGeometryChange = function(self)
+            updateRightHorizontalWidth()
+        end
+        table.insert(panelsList, { panel = panel })
+        table.insert(rightPanelList, panel)
+    end
+
+    g_settings.set('rightPanelCount', #rightPanelList)
+
+    updateRightHorizontalWidth()
     updateRightHorizontalPanelAnchors()
-    -- Update action bars when right extra panel is shown
+    updateSidePanelButtons()
+
     if modules.game_actionbar and modules.game_actionbar.updateVisibleWidgetsExternal then
         addEvent(function()
             modules.game_actionbar.updateVisibleWidgetsExternal()
@@ -2509,12 +2759,37 @@ function onIncreaseRightPanels()
 end
 
 function onDecreaseRightPanels()
-    rightIncreaseSidePanels:setEnabled(true)
-    rightDecreaseSidePanels:setEnabled(false)
-    movePanel(gameRightExtraPanel)
-    modules.client_options.setOption('showRightExtraPanel', false)
+    -- Right side must have at least 1 vertical panel (it cannot have 0)
+    if #rightPanelList <= 1 then
+        updateSidePanelButtons()
+        return
+    end
+
+    local lastPanel = rightPanelList[#rightPanelList]
+    table.remove(rightPanelList)
+
+    movePanel(lastPanel)
+
+    if lastPanel == gameRightExtraPanel then
+        gameRightExtraPanel:setOn(false)
+        gameRightExtraPanel:setVisible(false)
+        gameRightExtraPanel:setWidth(0)
+    else
+        for i, v in ipairs(panelsList) do
+            if v.panel == lastPanel then
+                table.remove(panelsList, i)
+                break
+            end
+        end
+        lastPanel:destroy()
+    end
+
+    g_settings.set('rightPanelCount', #rightPanelList)
+
+    updateRightHorizontalWidth()
     updateRightHorizontalPanelAnchors()
-    -- Update action bars when right extra panel is hidden
+    updateSidePanelButtons()
+
     if modules.game_actionbar and modules.game_actionbar.updateVisibleWidgetsExternal then
         addEvent(function()
             modules.game_actionbar.updateVisibleWidgetsExternal()
