@@ -188,6 +188,27 @@ function show()
     end
 end
 
+function ensurePingWidget()
+    local mapPanel = modules.game_interface and modules.game_interface.getMapPanel()
+    if not mapPanel then return end
+
+    if not PingWidget or PingWidget:isDestroyed() or PingWidget:getParent() ~= mapPanel then
+        if PingWidget and not PingWidget:isDestroyed() then
+            PingWidget:destroy()
+        end
+        PingWidget = g_ui.loadUI("pingFps", mapPanel)
+        MainPingPanel = g_ui.createWidget("testPingPanel", PingWidget:getChildByIndex(1))
+        MainPingPanel:setId("ping")
+
+        pingImg = MainPingPanel:getChildByIndex(1)
+        pingPanel = MainPingPanel:getChildByIndex(2)
+
+        mainFpsPanel = g_ui.createWidget("testPingPanel", PingWidget:getChildByIndex(2))
+        mainFpsPanel:setId("fps")
+        fpsPanel2 = mainFpsPanel:getChildByIndex(2)
+    end
+end
+
 function online()
     showGameButtons()
 
@@ -197,48 +218,49 @@ function online()
         end
         local showPing = modules.client_options.getOption('showPing')
         local pingFeatureAvailable = g_game.getFeature(GameClientPing) or g_game.getFeature(GameExtendedClientPing)
-        
-        if not PingWidget then
-            PingWidget = g_ui.loadUI("pingFps", modules.game_interface.getMapPanel())
-            MainPingPanel = g_ui.createWidget("testPingPanel", PingWidget:getChildByIndex(1))
-            MainPingPanel:setId("ping")
-            
-            pingImg = MainPingPanel:getChildByIndex(1)
-            pingPanel = MainPingPanel:getChildByIndex(2)
-            
-            mainFpsPanel = g_ui.createWidget("testPingPanel", PingWidget:getChildByIndex(2))
-            mainFpsPanel:setId("fps")
-            fpsPanel2 = mainFpsPanel:getChildByIndex(2)
-        end
+        local isPingActive = showPing and pingFeatureAvailable
 
-        if showPing and pingFeatureAvailable then
+        ensurePingWidget()
+
+        if isPingActive then
             pingLabel:show()
-            if pingPanel then
-                pingPanel:show()
-                pingImg:show()
-            end
         else
             pingLabel:hide()
-            if pingPanel then
-                pingPanel:hide()
-                pingImg:hide()
-            end
         end
 
-        pingImg:setVisible(showPing)
-        pingPanel:setVisible(showPing)
-        
+        if PingWidget and not PingWidget:isDestroyed() then
+            local pingRow = PingWidget:getChildByIndex(1)
+            if pingRow then pingRow:setVisible(isPingActive) end
+            local fpsRow = PingWidget:getChildByIndex(2)
+            local showFps = modules.client_options.getOption('showFps')
+            if fpsRow then fpsRow:setVisible(showFps) end
+        end
+
+        if pingImg then pingImg:setVisible(isPingActive) end
+        if pingPanel then pingPanel:setVisible(isPingActive) end
+
         local showFps = modules.client_options.getOption('showFps')
-        fpsPanel2:setVisible(showFps)
+        if fpsPanel2 then
+            fpsPanel2:setVisible(showFps)
+        end
     end)
 end
 
 function offline()
     hideGameButtons()
     pingLabel:hide()
+    if PingWidget and not PingWidget:isDestroyed() then
+        local pingRow = PingWidget:getChildByIndex(1)
+        if pingRow then pingRow:setVisible(false) end
+        local fpsRow = PingWidget:getChildByIndex(2)
+        if fpsRow then fpsRow:setVisible(false) end
+    end
     if pingPanel then
         pingPanel:hide()
         pingImg:hide()
+    end
+    if fpsPanel2 then
+        fpsPanel2:hide()
     end
     fpsMin = -1
 end
@@ -331,7 +353,14 @@ function updatePing(ping)
 end
 
 function setPingVisible(enable)
+    ensurePingWidget()
     pingLabel:setVisible(enable)
+    if PingWidget and not PingWidget:isDestroyed() then
+        local pingRow = PingWidget:getChildByIndex(1)
+        if pingRow then
+            pingRow:setVisible(enable)
+        end
+    end
     if pingPanel then
         pingPanel:setVisible(enable)
         pingImg:setVisible(enable)
@@ -339,7 +368,14 @@ function setPingVisible(enable)
 end
 
 function setFpsVisible(enable)
+    ensurePingWidget()
     fpsLabel:setVisible(enable)
+    if PingWidget and not PingWidget:isDestroyed() then
+        local fpsRow = PingWidget:getChildByIndex(2)
+        if fpsRow then
+            fpsRow:setVisible(enable)
+        end
+    end
     if fpsPanel2 then
         fpsPanel2:setVisible(enable)
     end

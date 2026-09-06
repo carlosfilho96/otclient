@@ -119,12 +119,14 @@ local function setupComboBox()
     local mouseControlModeCombobox = panels.generalPanel:recursiveGetChildById('mouseControlMode')
     local lootControlModeCombobox = panels.generalPanel:recursiveGetChildById('lootControlMode')
 
-    for k, v in pairs({ { 'Disabled', 'disabled' }, { 'Default', 'default' }, { 'Full', 'full' }, { 'Animation', 'animation' } }) do
-        crosshairCombo:addOption(v[1], v[2])
-    end
+    if crosshairCombo then
+        for k, v in pairs({ { 'Disabled', 'disabled' }, { 'Default', 'default' }, { 'Full', 'full' }, { 'Animation', 'animation' } }) do
+            crosshairCombo:addOption(v[1], v[2])
+        end
 
-    crosshairCombo.onOptionChange = function(comboBox, option)
-        setOption('crosshair', comboBox:getCurrentOption().data)
+        crosshairCombo.onOptionChange = function(comboBox, option)
+            setOption('crosshair', comboBox:getCurrentOption().data)
+        end
     end
 
     mouseControlModeCombobox:addOption('Regular Controls', 0)

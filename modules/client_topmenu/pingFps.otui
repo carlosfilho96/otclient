@@ -1,46 +1,54 @@
 testPingPanel < UIWidget
-  size: 50 50
-  padding: 3
+  height: 20
+  width: 180
+  anchors.fill: parent
   focusable: false
-  pingImg
-  pingFpsLabel
-
-
-pingImg < UIWidget
-  size: 17 17
-  anchors.centerIn: parent
   phantom: true
-  focusable: false
 
-pingFpsLabel < UIWidget
-  size: 120 14
-  anchors.top: parent.bottom
-  anchors.centerIn: parent
-  margin-left: 65
-  phantom: true
-  font: verdana-11px-rounded
-  focusable: false
+  UIWidget
+    id: pingImg
+    size: 17 17
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+    phantom: true
+    focusable: false
+
+  UIWidget
+    id: pingFpsLabel
+    height: 17
+    anchors.left: prev.right
+    anchors.right: parent.right
+    anchors.verticalCenter: prev.verticalCenter
+    margin-left: 5
+    phantom: true
+    font: verdana-11px-rounded
+    text-align: left
+    text-offset: 0 1
+    focusable: false
 
 
 Panel
+  id: pingWidget
   anchors.top: parent.top
   anchors.left: parent.left
-  height: 60
-  width: 150
-  margin-top: 35
-  Panel
-    anchors.top: parent.top
-    anchors.left: parent.left
-    anchors.right: parent.right
-    height: 20
-    layout:
-      type: horizontalBox
+  margin-top: 10
+  margin-left: 10
+  width: 180
+  layout:
+    type: verticalBox
+    fit-children: true
+    spacing: 4
+  phantom: true
+  focusable: false
 
   Panel
-    anchors.top: prev.bottom
-    anchors.left: parent.left
-    anchors.right: parent.right
-    margin-top: 5
+    id: pingRow
     height: 20
-    layout:
-      type: horizontalBox
+    phantom: true
+    focusable: false
+
+  Panel
+    id: fpsRow
+    height: 20
+    phantom: true
+    focusable: false

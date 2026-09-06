@@ -329,16 +329,15 @@ return {
         end
     },
     crosshair                         = {
-        value = 'default',
+        value = 'disabled',
         action = function(value, options, controller, panels, extraWidgets)
-            local crossPath = '/images/game/crosshair/'
-            local newValue = value
-            if newValue == 'disabled' then
-                newValue = nil
+            if panels.gameMapPanel then
+                panels.gameMapPanel:setCrosshairTexture('')
             end
-
-            panels.gameMapPanel:setCrosshairTexture(newValue and crossPath .. newValue or nil)
-            panels.interface:recursiveGetChildById('crosshair'):setCurrentOptionByData(newValue, true)
+            local crosshairWidget = panels.interface and panels.interface:recursiveGetChildById('crosshair')
+            if crosshairWidget then
+                crosshairWidget:setCurrentOptionByData('disabled', true)
+            end
         end
     },
     nativeCursor = {

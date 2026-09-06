@@ -2519,8 +2519,16 @@ function setupViewMode(mode)
     updateSidePanelButtons()
 
     if currentViewMode == 2 then
-        gameMapPanel:addAnchor(AnchorLeft, 'gameLeftPanel', AnchorRight)
-        gameMapPanel:addAnchor(AnchorRight, 'gameRightPanel', AnchorLeft)
+        if gameLeftActionPanel then
+            gameMapPanel:addAnchor(AnchorLeft, 'gameLeftActionPanel', AnchorRight)
+        else
+            gameMapPanel:addAnchor(AnchorLeft, 'gameLeftPanel', AnchorRight)
+        end
+        if gameRightActionPanel then
+            gameMapPanel:addAnchor(AnchorRight, 'gameRightActionPanel', AnchorLeft)
+        else
+            gameMapPanel:addAnchor(AnchorRight, 'gameRightPanel', AnchorLeft)
+        end
         gameMapPanel:addAnchor(AnchorBottom, 'bottomSplitter', AnchorTop)
         gameMapPanel:addAnchor(AnchorTop, 'gameTopPanel', AnchorBottom)
         gameRootPanel:addAnchor(AnchorTop, 'parent', AnchorTop)
