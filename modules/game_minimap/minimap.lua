@@ -144,33 +144,51 @@ function mapController:onInit()
         if resetBtn then resetBtn:hide() end
     end
 
-    local headerButtons = { 'closeButton', 'minimizeButton', 'toggleFilterButton', 'contextMenuButton', 'newWindowButton', 'lockButton' }
-    for _, btnId in ipairs(headerButtons) do
-        local btn = self.ui:getChildById(btnId)
-        if btn then
-            btn:hide()
-            btn:setWidth(0)
-            btn:setHeight(0)
+    local function removeHeaderButtons(ui)
+        if not ui then return end
+        local btnIds = { 'closeButton', 'minimizeButton', 'toggleFilterButton', 'contextMenuButton', 'newWindowButton', 'lockButton' }
+        for _, btnId in ipairs(btnIds) do
+            local btn = ui:getChildById(btnId)
+            while btn do
+                btn:hide()
+                btn:setWidth(0)
+                btn:setHeight(0)
+                btn:destroy()
+                btn = ui:getChildById(btnId)
+            end
+        end
+        local topBar = ui:getChildById('miniwindowTopBar')
+        if topBar then
+            topBar.onDoubleClick = nil
         end
     end
-    local topBar = self.ui:getChildById('miniwindowTopBar')
-    if topBar then
-        topBar.onDoubleClick = nil
-    end
+
+    removeHeaderButtons(self.ui)
 end
 
 function mapController:onGameStart()
     self.ui:setupOnStart()
 
-    local headerButtons = { 'closeButton', 'minimizeButton', 'toggleFilterButton', 'contextMenuButton', 'newWindowButton', 'lockButton' }
-    for _, btnId in ipairs(headerButtons) do
-        local btn = self.ui:getChildById(btnId)
-        if btn then
-            btn:hide()
-            btn:setWidth(0)
-            btn:setHeight(0)
+    local function removeHeaderButtons(ui)
+        if not ui then return end
+        local btnIds = { 'closeButton', 'minimizeButton', 'toggleFilterButton', 'contextMenuButton', 'newWindowButton', 'lockButton' }
+        for _, btnId in ipairs(btnIds) do
+            local btn = ui:getChildById(btnId)
+            while btn do
+                btn:hide()
+                btn:setWidth(0)
+                btn:setHeight(0)
+                btn:destroy()
+                btn = ui:getChildById(btnId)
+            end
+        end
+        local topBar = ui:getChildById('miniwindowTopBar')
+        if topBar then
+            topBar.onDoubleClick = nil
         end
     end
+
+    removeHeaderButtons(self.ui)
 
     g_keyboard.bindKeyDown('Alt+M', toggleMinimap)
 
