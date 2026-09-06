@@ -1876,6 +1876,7 @@ local function calculateLeftHorizontalPanelWidth()
 end
 
 local updatingLeftWidth = false
+local updatingLeftAnchors = false
 function updateLeftHorizontalWidth()
     if updatingLeftWidth then return end
     if not gameLeftHorizontalPanel or not gameLeftPanel then return end
@@ -1887,6 +1888,21 @@ function updateLeftHorizontalWidth()
             leftHorizontalResizeBorder:setWidth(newWidth)
         end
         updatingLeftWidth = false
+    end
+
+    -- Also sync horizontal panel visibility when vertical panels change state
+    if not updatingLeftAnchors then
+        local isLeftOn = gameLeftPanel and gameLeftPanel:isOn()
+        local isLeftExtraOn = gameLeftExtraPanel and gameLeftExtraPanel:isOn()
+        local hasLeftPanels = isLeftOn or isLeftExtraOn
+        local isHorizontalOption = modules.client_options and modules.client_options.getOption('showLeftHorizontalPanel')
+        local panelVisible = gameLeftHorizontalPanel:isVisible()
+        -- If no panels active but horizontal is visible, or panels active but horizontal should show — sync
+        if (not hasLeftPanels and panelVisible) or (hasLeftPanels and isHorizontalOption and not panelVisible) then
+            updatingLeftAnchors = true
+            updateLeftHorizontalPanelAnchors()
+            updatingLeftAnchors = false
+        end
     end
 end
 
