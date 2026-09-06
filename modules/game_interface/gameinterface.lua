@@ -1890,30 +1890,38 @@ function updateLeftHorizontalWidth()
         updatingLeftWidth = false
     end
 
-    -- Also sync horizontal panel visibility when vertical panels change state
+    -- Sync horizontal panel visibility when vertical panel state changes
     if not updatingLeftAnchors then
         local isLeftOn = gameLeftPanel and gameLeftPanel:isOn()
         local isLeftExtraOn = gameLeftExtraPanel and gameLeftExtraPanel:isOn()
         local hasLeftPanels = isLeftOn or isLeftExtraOn
         local isHorizontalOption = modules.client_options and modules.client_options.getOption('showLeftHorizontalPanel')
         local panelVisible = gameLeftHorizontalPanel:isVisible()
-        -- If no panels active but horizontal is visible, or panels active but horizontal should show — sync
         if (not hasLeftPanels and panelVisible) or (hasLeftPanels and isHorizontalOption and not panelVisible) then
-            updatingLeftAnchors = true
             updateLeftHorizontalPanelAnchors()
-            updatingLeftAnchors = false
         end
     end
 end
 
 function updateLeftHorizontalPanelAnchors()
+    if updatingLeftAnchors then return end
     if not gameLeftHorizontalPanel or not gameLeftPanel then return end
+    updatingLeftAnchors = true
 
     local isLeftExtraOn = gameLeftExtraPanel and gameLeftExtraPanel:isOn()
     local isLeftOn = gameLeftPanel and gameLeftPanel:isOn()
     local hasLeftPanels = isLeftOn or isLeftExtraOn
     local isHorizontalOption = modules.client_options.getOption('showLeftHorizontalPanel')
     local isHorizontalOn = isHorizontalOption and hasLeftPanels
+
+    -- debug
+    local dbg = io.open("leftpanel_debug.txt", "a")
+    if dbg then
+        dbg:write(string.format("[updateLeftHorizontalPanelAnchors] isLeftOn=%s isLeftExtraOn=%s hasLeftPanels=%s isHorizontalOption=%s panelVisible=%s panelOn=%s\n",
+            tostring(isLeftOn), tostring(isLeftExtraOn), tostring(hasLeftPanels), tostring(isHorizontalOption),
+            tostring(gameLeftHorizontalPanel:isVisible()), tostring(gameLeftHorizontalPanel:isOn())))
+        dbg:close()
+    end
 
     if not hasLeftPanels then
         if gameLeftHorizontalPanel:isVisible() or gameLeftHorizontalPanel:isOn() then
@@ -1975,6 +1983,7 @@ function updateLeftHorizontalPanelAnchors()
             gameLeftExtraPanel:setMarginLeft(1)
         end
     end
+    updatingLeftAnchors = false
 end
 
 local function movePanel(mainpanel)
