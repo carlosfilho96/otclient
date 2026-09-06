@@ -1915,21 +1915,25 @@ function updateLeftHorizontalPanelAnchors()
     local isHorizontalOn = isHorizontalOption and hasLeftPanels
 
     if not hasLeftPanels then
+        -- Auto-hide: just hide the panel, leave children in place so they reappear when panels come back
         if gameLeftHorizontalPanel:isVisible() or gameLeftHorizontalPanel:isOn() then
-            -- setOn(false) FIRST so $on: visible: true style stops forcing the panel visible
-            -- before movePanel triggers geometry callbacks that re-check visibility
             gameLeftHorizontalPanel:setOn(false)
             gameLeftHorizontalPanel:setVisible(false)
             if leftHorizontalResizeBorder then
                 leftHorizontalResizeBorder:setVisible(false)
             end
-            movePanel(gameLeftHorizontalPanel)
         end
     elseif isHorizontalOption then
-        gameLeftHorizontalPanel:setOn(true)
-        gameLeftHorizontalPanel:setVisible(true)
-        if leftHorizontalResizeBorder then
-            leftHorizontalResizeBorder:setVisible(true)
+        -- Auto-show: restore the panel with its saved height
+        if not gameLeftHorizontalPanel:isVisible() or not gameLeftHorizontalPanel:isOn() then
+            local savedHeight = g_settings.getNumber('leftHorizontalPanelHeight', 170)
+            local minH = getPanelMinHeight(gameLeftHorizontalPanel)
+            gameLeftHorizontalPanel:setOn(true)
+            gameLeftHorizontalPanel:setVisible(true)
+            gameLeftHorizontalPanel:setHeight(math.max(savedHeight, minH))
+            if leftHorizontalResizeBorder then
+                leftHorizontalResizeBorder:setVisible(true)
+            end
         end
     end
 
