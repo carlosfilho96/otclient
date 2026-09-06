@@ -91,6 +91,7 @@ void MapView::registerEvents() {
                 last.y = -last.y;
 
                 m_shader->setUniformValue(ShaderManager::MAP_WALKOFFSET, last.x / static_cast<float>(m_rectDimension.width()), last.y / static_cast<float>(m_rectDimension.height()));
+                m_shader->setUniformValue(ShaderManager::MAP_TEXTURE_SIZE, static_cast<float>(m_rectDimension.width()), static_cast<float>(m_rectDimension.height()));
 
                 g_painter->setShaderProgram(m_shader);
             }

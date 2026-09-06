@@ -9,6 +9,11 @@ return {
         value = false,
         action = function(value, options, controller, panels, extraWidgets)
             modules.client_topmenu.setFpsVisible(value)
+            modules.client_topmenu.setPingVisible(value)
+            if options and options.showPing then
+                options.showPing.value = value
+            end
+            g_settings.set('showPing', value)
         end
     },
     showPing                          = {
@@ -23,8 +28,21 @@ return {
             g_window.setFullscreen(value)
         end
     },
+    hdMode                            = {
+        value = true,
+        action = function(value, options, controller, panels, extraWidgets)
+            local mapPanel = modules.game_interface and modules.game_interface.getMapPanel()
+            if mapPanel then
+                if value then
+                    mapPanel:setShader('Map - HD Mode')
+                else
+                    mapPanel:setShader('Default')
+                end
+            end
+        end
+    },
     classicControl                    = {
-        value = g_platform.isMobile() and true or false,
+        value = true,
         action = function(value, options, controller, panels, extraWidgets)
             -- Update the mouseControlMode based on this option
             -- 0 = Regular Controls, 1 = Classic Controls, 2 = Left Smart-Click
@@ -90,7 +108,7 @@ return {
         end
     },
     mouseControlMode                  = {
-        value = 0, -- Default to "Regular Controls"
+        value = 1, -- Default to "Classic Controls"
         action = function(value, options, controller, panels, extraWidgets)
             -- Update the underlying options values first
             -- 0 = Regular Controls, 1 = Classic Controls, 2 = Left Smart-Click
@@ -152,7 +170,7 @@ return {
             end, 50)
         end
     },
-    returnDisablesChat                = false,
+    returnDisablesChat                = true,
     smartWalk                         = false,
     autoChaseOverride                 = true,
     talkOnRightClick                  = false,

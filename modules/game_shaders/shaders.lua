@@ -3,6 +3,12 @@ local MAP_SHADERS = { {
     name = 'Map - Default',
     frag = nil
 }, {
+    name = 'Map - HD Mode',
+    frag = 'shaders/fragment/hd_xbrz.frag'
+}, {
+    name = 'Map - Smooth Retro',
+    frag = 'shaders/fragment/hd_smooth.frag'
+}, {
     name = 'Map - Fog',
     frag = 'shaders/fragment/fog.frag',
     tex1 = 'images/clouds'
@@ -112,7 +118,12 @@ local TEXT_SHADERS = { {
 
 local function attachShaders()
     local map = modules.game_interface.getMapPanel()
-    map:setShader('Default')
+    local hd = g_settings.getBoolean('hdMode', true)
+    if hd then
+        map:setShader('Map - HD Mode')
+    else
+        map:setShader('Default')
+    end
 
     local player = g_game.getLocalPlayer()
     if player then

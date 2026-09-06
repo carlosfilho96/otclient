@@ -40,6 +40,7 @@ public:
         MAP_GLOBAL_COORD = 17,
         TEXT_OFFSET_UNIFORM = 18,
         TEXT_CENTER_UNIFORM = 19,
+        MAP_TEXTURE_SIZE = 20,
     };
 
     void init();

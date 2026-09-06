@@ -14,19 +14,7 @@ UIWidget
       anchors.left: parent.left
       anchors.right: parent.right
       anchors.top: parent.top
-      height: 22
-
-      OptionCheckBoxMarked
-        id: showPing
-        !text: tr('Show connection ping')
-        !tooltip: tr('Display connection speed to the server (milliseconds)')
-
-    SmallReversedQtPanel
-      anchors.left: parent.left
-      anchors.right: parent.right
-      anchors.top: prev.bottom
       height: 32
-      margin-top: 7
 
       $mobile:
         height: 0
@@ -40,7 +28,7 @@ UIWidget
         color: #c0c0c0ff
         anchors.verticalCenter: parent.verticalCenter
         text-align: left
-        !text: tr('Mouse Control:')
+        !text: tr('Mouse Preset:')
 
       QtComboBox
         id: mouseControlMode
@@ -72,31 +60,8 @@ UIWidget
       height: 22
 
       OptionCheckBox
-        id: autoChaseOverride
-        !text: tr('Allow auto chase override')
-
-    SmallReversedQtPanel
-      anchors.left: parent.left
-      anchors.right: parent.right
-      anchors.top: prev.bottom
-      margin-top: 7
-      height: 22
-
-      OptionCheckBox
         id: talkOnRightClick
         !text: tr('Right-click talk to NPC')
-
-    SmallReversedQtPanel
-      anchors.left: parent.left
-      anchors.right: parent.right
-      anchors.top: prev.bottom
-      margin-top: 7
-      height: 22
-
-      OptionCheckBoxMarked
-        id: returnDisablesChat
-        !text: tr('Enter to disable chat')
-        !tooltip: tr('Enables disabling chat and enabling WASD when pressed Enter.')
 
     SmallReversedQtPanel
       anchors.left: parent.left
@@ -108,29 +73,6 @@ UIWidget
       OptionCheckBox
         id: moveStack
         !text: tr('Move stacks directly')
-
-    SmallReversedQtPanel
-      anchors.left: parent.left
-      anchors.right: parent.right
-      anchors.top: prev.bottom
-      margin-top: 7
-      height: 22
-
-      OptionCheckBoxMarked
-        id: smartWalk
-        !text: tr('Enable smart walking')
-        !tooltip: tr('Will detect when to use diagonal step based on the\nkeys you are pressing')
-
-    SmallReversedQtPanel
-      anchors.left: parent.left
-      anchors.right: parent.right
-      anchors.top: prev.bottom
-      margin-top: 7
-      height: 22
-
-      OptionCheckBox
-        id: openMaximized
-        !text: tr('Open containers maximized')
 
     SmallReversedQtPanel
       anchors.left: parent.left

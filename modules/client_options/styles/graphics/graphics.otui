@@ -25,6 +25,18 @@ UIWidget
     height: 22
   
     OptionCheckBoxMarked
+      id: hdMode
+      !text: tr('Modo HD')
+      !tooltip: 'Ativa o modo de alta definicao das sprites.'
+
+  SmallReversedQtPanel
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 7
+    height: 22
+  
+    OptionCheckBoxMarked
       id: fullscreen
       !text: 'Full Screen Mode'
       !tooltip: 'Ctrl+Shift+F'
@@ -44,8 +56,8 @@ UIWidget
   
     OptionCheckBoxMarked
       id: showFps
-      !tooltip: tr('Show frame rate')
-      !text: tr('Show frame rate')
+      !tooltip: tr('Show frame rate and ping')
+      !text: tr('Show frame rate and ping')
       anchors.top: prev.bottom
 
     OptionScaleScroll

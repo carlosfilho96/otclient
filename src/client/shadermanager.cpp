@@ -127,6 +127,7 @@ void ShaderManager::setupMapShader(const std::string_view name)
         shader->bindUniformLocation(MAP_GLOBAL_COORD, "u_MapGlobalCoord");
         shader->bindUniformLocation(MAP_WALKOFFSET, "u_WalkOffset");
         shader->bindUniformLocation(MAP_ZOOM, "u_MapZoom");
+        shader->bindUniformLocation(MAP_TEXTURE_SIZE, "u_TextureSize");
     });
 }
 

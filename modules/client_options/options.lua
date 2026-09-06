@@ -8,7 +8,7 @@ panels = {
     interfaceHUD = nil,
     interface = nil,
     misc = nil,
-    miscHelp = nil,
+    miscGameplay = nil,
     keybindsPanel = nil
 }
 
@@ -66,16 +66,10 @@ local buttons = { {
 }, {
     text = "Misc.",
     icon = "/images/icons/icon_misc",
-    open = "misc",
-    subCategories = { --[[ {
-        text = "GamePlay",
-        open = "GamePlay"
-    },  {
-        text = "Screenshots",
-        open = "Screenshots"
-    }, ]] {
-        text = "Help",
-        open = "miscHelp"
+    open = "miscGameplay",
+    subCategories = { {
+        text = "Gameplay",
+        open = "miscGameplay"
     } }
 } }
 
@@ -174,14 +168,15 @@ local function setupComboBox()
         setOption('framesRarity', comboBox:getCurrentOption().data)
     end
 
-    local profileCombobox = panels.misc:recursiveGetChildById('profile')
+    local profileCombobox = panels.misc and panels.misc:recursiveGetChildById('profile')
+    if profileCombobox then
+        for i = 1, 10 do
+            profileCombobox:addOption(tostring(i), i)
+        end
 
-    for i = 1, 10 do
-        profileCombobox:addOption(tostring(i), i)
-    end
-
-    profileCombobox.onOptionChange = function(comboBox, option)
-        setOption('profile', comboBox:getCurrentOption().data)
+        profileCombobox.onOptionChange = function(comboBox, option)
+            setOption('profile', comboBox:getCurrentOption().data)
+        end
     end
 
     for _, preset in ipairs(Keybind.presets) do
@@ -220,8 +215,8 @@ local function setup()
         setOption('mouseControlMode', mouseControlMode, true)
     else
         -- Derive from classicControl and smartLeftClick if mouseControlMode isn't set
-        local classicControl = g_settings.getBoolean('classicControl')
-        local smartLeftClick = g_settings.getBoolean('smartLeftClick')
+        local classicControl = g_settings.getBoolean('classicControl', true)
+        local smartLeftClick = g_settings.getBoolean('smartLeftClick', false)
         
         if classicControl then
             setOption('mouseControlMode', 1, true)
@@ -311,8 +306,8 @@ function controller:onInit()
 
     panels.soundPanel = g_ui.loadUI('styles/sound/audio', controller.ui.optionsTabContent)
 
-    panels.misc = g_ui.loadUI('styles/misc/misc', controller.ui.optionsTabContent)
-    panels.miscHelp = g_ui.loadUI('styles/misc/help', controller.ui.optionsTabContent)
+    panels.miscGameplay = g_ui.loadUI('styles/misc/gameplay', controller.ui.optionsTabContent)
+    panels.misc = panels.miscGameplay
 
     self.ui:hide()
 

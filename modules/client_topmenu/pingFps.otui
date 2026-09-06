@@ -48,6 +48,12 @@ Panel
     focusable: false
 
   Panel
+    id: worldRow
+    height: 20
+    phantom: true
+    focusable: false
+
+  Panel
     id: fpsRow
     height: 20
     phantom: true
