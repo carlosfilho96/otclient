@@ -1914,23 +1914,16 @@ function updateLeftHorizontalPanelAnchors()
     local isHorizontalOption = modules.client_options.getOption('showLeftHorizontalPanel')
     local isHorizontalOn = isHorizontalOption and hasLeftPanels
 
-    -- debug
-    local dbg = io.open("leftpanel_debug.txt", "a")
-    if dbg then
-        dbg:write(string.format("[updateLeftHorizontalPanelAnchors] isLeftOn=%s isLeftExtraOn=%s hasLeftPanels=%s isHorizontalOption=%s panelVisible=%s panelOn=%s\n",
-            tostring(isLeftOn), tostring(isLeftExtraOn), tostring(hasLeftPanels), tostring(isHorizontalOption),
-            tostring(gameLeftHorizontalPanel:isVisible()), tostring(gameLeftHorizontalPanel:isOn())))
-        dbg:close()
-    end
-
     if not hasLeftPanels then
         if gameLeftHorizontalPanel:isVisible() or gameLeftHorizontalPanel:isOn() then
-            movePanel(gameLeftHorizontalPanel)
+            -- setOn(false) FIRST so $on: visible: true style stops forcing the panel visible
+            -- before movePanel triggers geometry callbacks that re-check visibility
             gameLeftHorizontalPanel:setOn(false)
             gameLeftHorizontalPanel:setVisible(false)
             if leftHorizontalResizeBorder then
                 leftHorizontalResizeBorder:setVisible(false)
             end
+            movePanel(gameLeftHorizontalPanel)
         end
     elseif isHorizontalOption then
         gameLeftHorizontalPanel:setOn(true)
@@ -2019,10 +2012,10 @@ function showRightHorizontalPanel(show)
         gameRightHorizontalPanel:setHeight(math.max(savedHeight, minH))
         updateRightHorizontalPanelAnchors()
     else
-        movePanel(gameRightHorizontalPanel)
         gameRightHorizontalPanel:setOn(false)
         gameRightHorizontalPanel:setVisible(false)
         gameRightHorizontalPanel:setHeight(0)
+        movePanel(gameRightHorizontalPanel)
         updateRightHorizontalPanelAnchors()
     end
 end
@@ -2042,10 +2035,10 @@ function showLeftHorizontalPanel(show)
         updateLeftHorizontalPanelAnchors()
         updateLeftHorizontalWidth()
     else
-        movePanel(gameLeftHorizontalPanel)
         gameLeftHorizontalPanel:setOn(false)
         gameLeftHorizontalPanel:setVisible(false)
         gameLeftHorizontalPanel:setHeight(0)
+        movePanel(gameLeftHorizontalPanel)
         updateLeftHorizontalPanelAnchors()
     end
 end
