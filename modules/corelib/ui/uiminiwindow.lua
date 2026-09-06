@@ -36,10 +36,21 @@ function UIMiniWindow:minimize(dontSave)
     self:setOn(true)
     self:getChildById('contentsPanel'):hide()
     self:getChildById('miniwindowScrollBar'):hide()
-    self:getChildById('bottomResizeBorder'):hide()
-    local rightResizeBorder = self:getChildById('rightResizeBorder')
-    if rightResizeBorder then
-        rightResizeBorder:hide()
+    local allBorderIds = {
+        'bottomResizeBorder',
+        'rightResizeBorder',
+        'leftResizeBorder',
+        'topResizeBorder',
+        'topLeftResizeBorder',
+        'topRightResizeBorder',
+        'bottomLeftResizeBorder',
+        'bottomRightResizeBorder'
+    }
+    for _, id in ipairs(allBorderIds) do
+        local border = self:getChildById(id)
+        if border then
+            border:hide()
+        end
     end
     self:getChildById('minimizeButton'):setOn(true)
     self.maximizedHeight = self:getHeight()
@@ -479,36 +490,72 @@ function UIMiniWindow:saveParentIndex(parentId, index)
 end
 
 function UIMiniWindow:disableResize()
-    self:getChildById('bottomResizeBorder'):disable()
-    local rightResizeBorder = self:getChildById('rightResizeBorder')
-    if rightResizeBorder then
-        rightResizeBorder:disable()
+    local allBorderIds = {
+        'bottomResizeBorder',
+        'rightResizeBorder',
+        'leftResizeBorder',
+        'topResizeBorder',
+        'topLeftResizeBorder',
+        'topRightResizeBorder',
+        'bottomLeftResizeBorder',
+        'bottomRightResizeBorder'
+    }
+    for _, id in ipairs(allBorderIds) do
+        local border = self:getChildById(id)
+        if border then
+            border:disable()
+        end
     end
 end
 
 function UIMiniWindow:enableResize()
-    self:getChildById('bottomResizeBorder'):enable()
-    local rightResizeBorder = self:getChildById('rightResizeBorder')
-    if rightResizeBorder and not (self:getParent() and self:getParent():getClassName() == 'UIMiniWindowContainer') then
-        rightResizeBorder:enable()
-    end
+    self:updateResizeBorders()
 end
 
 function UIMiniWindow:updateResizeBorders()
-    local rightResizeBorder = self:getChildById('rightResizeBorder')
-    if not rightResizeBorder then
-        return
-    end
-
     local parent = self:getParent()
     local isDocked = parent and parent:getClassName() == 'UIMiniWindowContainer'
 
+    local sideAndCornerIds = {
+        'rightResizeBorder',
+        'leftResizeBorder',
+        'topResizeBorder',
+        'topLeftResizeBorder',
+        'topRightResizeBorder',
+        'bottomLeftResizeBorder',
+        'bottomRightResizeBorder'
+    }
+
+    local bottom = self:getChildById('bottomResizeBorder')
+
     if isDocked then
-        rightResizeBorder:disable()
-        rightResizeBorder:hide()
+        for _, id in ipairs(sideAndCornerIds) do
+            local border = self:getChildById(id)
+            if border then
+                border:disable()
+                border:hide()
+            end
+        end
+        if bottom then
+            bottom:setMarginLeft(3)
+            bottom:setMarginRight(3)
+            bottom:enable()
+            bottom:show()
+        end
     else
-        rightResizeBorder:enable()
-        rightResizeBorder:show()
+        for _, id in ipairs(sideAndCornerIds) do
+            local border = self:getChildById(id)
+            if border then
+                border:enable()
+                border:show()
+            end
+        end
+        if bottom then
+            bottom:setMarginLeft(8)
+            bottom:setMarginRight(8)
+            bottom:enable()
+            bottom:show()
+        end
     end
 end
 

@@ -19,18 +19,6 @@ MiniWindow
     color: #9d9d9dff
 
 
-  ResizeBorder
-    id: bottomResizeBorder
-    anchors.bottom: parent.bottom
-    anchors.left: parent.left
-    anchors.right: parent.right
-    height: 3
-    minimum: 120
-    maximum: 2000
-    margin-left: 3
-    margin-right: 4
-    background: #ffffff88
-
   UIWidget
     id: contentsPanel
     anchors.top: miniwindowHeader.bottom
@@ -322,6 +310,45 @@ MiniWindow
         image-clip: 20 20 20 20
 
   ResizeBorder
+    id: bottomResizeBorder
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    height: 4
+    minimum: 120
+    maximum: 2000
+    margin-left: 8
+    margin-right: 8
+    background: #ffffff88
+    &edge: 'bottom'
+
+  ResizeBorder
+    id: topResizeBorder
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    height: 4
+    minimum: 120
+    maximum: 2000
+    margin-left: 8
+    margin-right: 8
+    background: #ffffff88
+    &edge: 'top'
+
+  ResizeBorder
+    id: leftResizeBorder
+    anchors.left: parent.left
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    width: 4
+    minimum: 120
+    maximum: 2000
+    margin-top: 8
+    margin-bottom: 8
+    background: #ffffff88
+    &edge: 'left'
+
+  ResizeBorder
     id: rightResizeBorder
     anchors.right: parent.right
     anchors.top: parent.top
@@ -329,6 +356,47 @@ MiniWindow
     width: 4
     minimum: 120
     maximum: 2000
-    margin-top: 3
-    margin-bottom: 3
+    margin-top: 8
+    margin-bottom: 8
     background: #ffffff88
+    &edge: 'right'
+
+  ResizeBorder
+    id: topLeftResizeBorder
+    anchors.top: parent.top
+    anchors.left: parent.left
+    size: 8 8
+    minimum: 120
+    maximum: 2000
+    background: #ffffff88
+    &edge: 'topleft'
+
+  ResizeBorder
+    id: topRightResizeBorder
+    anchors.top: parent.top
+    anchors.right: parent.right
+    size: 8 8
+    minimum: 120
+    maximum: 2000
+    background: #ffffff88
+    &edge: 'topright'
+
+  ResizeBorder
+    id: bottomLeftResizeBorder
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
+    size: 8 8
+    minimum: 120
+    maximum: 2000
+    background: #ffffff88
+    &edge: 'bottomleft'
+
+  ResizeBorder
+    id: bottomRightResizeBorder
+    anchors.bottom: parent.bottom
+    anchors.right: parent.right
+    size: 8 8
+    minimum: 120
+    maximum: 2000
+    background: #ffffff88
+    &edge: 'bottomright'
