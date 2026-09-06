@@ -523,27 +523,11 @@ return {
     showLeftExtraPanel                = {
         value = false,
         action = function(value, options, controller, panels, extraWidgets)
-            modules.game_interface.getLeftExtraPanel():setOn(value)
-            modules.game_interface.updateLeftHorizontalPanelAnchors()
-            -- Update action bars when left extra panel visibility changes
-            if modules.game_actionbar and modules.game_actionbar.updateVisibleWidgetsExternal then
-                addEvent(function()
-                    modules.game_actionbar.updateVisibleWidgetsExternal()
-                end)
-            end
         end
     },
     showLeftPanel                     = {
         value = true,
         action = function(value, options, controller, panels, extraWidgets)
-            modules.game_interface.getLeftPanel():setOn(value)
-            modules.game_interface.updateLeftHorizontalPanelAnchors()
-            -- Update action bars when left panel visibility changes
-            if modules.game_actionbar and modules.game_actionbar.updateVisibleWidgetsExternal then
-                addEvent(function()
-                    modules.game_actionbar.updateVisibleWidgetsExternal()
-                end)
-            end
         end
     },
     showRightExtraPanel               = {
