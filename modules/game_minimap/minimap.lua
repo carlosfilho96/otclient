@@ -143,10 +143,35 @@ function mapController:onInit()
         local resetBtn = minimap:getChildById('resetButton')
         if resetBtn then resetBtn:hide() end
     end
+
+    local headerButtons = { 'closeButton', 'minimizeButton', 'toggleFilterButton', 'contextMenuButton', 'newWindowButton', 'lockButton' }
+    for _, btnId in ipairs(headerButtons) do
+        local btn = self.ui:getChildById(btnId)
+        if btn then
+            btn:hide()
+            btn:setWidth(0)
+            btn:setHeight(0)
+        end
+    end
+    local topBar = self.ui:getChildById('miniwindowTopBar')
+    if topBar then
+        topBar.onDoubleClick = nil
+    end
 end
 
 function mapController:onGameStart()
     self.ui:setupOnStart()
+
+    local headerButtons = { 'closeButton', 'minimizeButton', 'toggleFilterButton', 'contextMenuButton', 'newWindowButton', 'lockButton' }
+    for _, btnId in ipairs(headerButtons) do
+        local btn = self.ui:getChildById(btnId)
+        if btn then
+            btn:hide()
+            btn:setWidth(0)
+            btn:setHeight(0)
+        end
+    end
+
     g_keyboard.bindKeyDown('Alt+M', toggleMinimap)
 
     mapController:registerEvents(g_game, {

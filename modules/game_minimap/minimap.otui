@@ -21,12 +21,41 @@ MiniWindow
     anchors.left: miniwindowHeader.left
     anchors.right: miniwindowHeader.right
     margin-top: 2
-    margin-left: 20
-    margin-right: 50
+    text-align: center
     font: verdana-11px-monochrome
     height: 13
     !text: tr('Map View')
     color: #9d9d9dff
+
+  UIButton
+    id: closeButton
+    visible: false
+    size: 0 0
+
+  UIButton
+    id: minimizeButton
+    visible: false
+    size: 0 0
+
+  UIButton
+    id: toggleFilterButton
+    visible: false
+    size: 0 0
+
+  UIButton
+    id: contextMenuButton
+    visible: false
+    size: 0 0
+
+  UIButton
+    id: newWindowButton
+    visible: false
+    size: 0 0
+
+  UIButton
+    id: lockButton
+    visible: false
+    size: 0 0
 
   ResizeBorder
     id: bottomResizeBorder
