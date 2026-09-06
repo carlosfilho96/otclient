@@ -124,6 +124,34 @@ function mapController:onInit()
                 g_settings.set('leftHorizontalPanelHeight', desired)
             end
         end
+
+        if widget.updateResizeBorders then
+            widget:updateResizeBorders()
+        end
+    end
+
+    local oldOnDragLeave = self.ui.onDragLeave
+    self.ui.onDragLeave = function(widget, droppedWidget, mousePos)
+        local ret = true
+        if oldOnDragLeave then
+            ret = oldOnDragLeave(widget, droppedWidget, mousePos)
+        end
+        local parent = widget:getParent()
+        local isDocked = parent and parent:getClassName() == 'UIMiniWindowContainer'
+        if not isDocked then
+            local savedWidth = widget:getSettings('width')
+            if savedWidth and savedWidth >= 120 and widget:getWidth() ~= savedWidth then
+                widget:setWidth(savedWidth)
+            end
+        end
+        if widget.updateResizeBorders then
+            widget:updateResizeBorders()
+        end
+        return ret
+    end
+
+    if self.ui.updateResizeBorders then
+        self.ui:updateResizeBorders()
     end
 
     self.ui.minimapBorder = self.ui:recursiveGetChildById('minimapBorder')
@@ -168,6 +196,9 @@ end
 
 function mapController:onGameStart()
     self.ui:setupOnStart()
+    if self.ui.updateResizeBorders then
+        self.ui:updateResizeBorders()
+    end
 
     local function removeHeaderButtons(ui)
         if not ui then return end

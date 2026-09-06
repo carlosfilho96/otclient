@@ -37,6 +37,10 @@ function UIMiniWindow:minimize(dontSave)
     self:getChildById('contentsPanel'):hide()
     self:getChildById('miniwindowScrollBar'):hide()
     self:getChildById('bottomResizeBorder'):hide()
+    local rightResizeBorder = self:getChildById('rightResizeBorder')
+    if rightResizeBorder then
+        rightResizeBorder:hide()
+    end
     self:getChildById('minimizeButton'):setOn(true)
     self.maximizedHeight = self:getHeight()
     self:setHeight(self.minimizedHeight)
@@ -61,6 +65,7 @@ function UIMiniWindow:maximize(dontSave)
     self:getChildById('contentsPanel'):show()
     self:getChildById('miniwindowScrollBar'):show()
     self:getChildById('bottomResizeBorder'):show()
+    self:updateResizeBorders()
     self:getChildById('minimizeButton'):setOn(false)
     self:setHeight(self:getSettings('height') or self.maximizedHeight)
 
@@ -115,6 +120,8 @@ function UIMiniWindow:setup()
             self:minimize()
         end
     end
+
+    self:updateResizeBorders()
 end
 
 function UIMiniWindow:setupOnStart()
@@ -170,6 +177,10 @@ function UIMiniWindow:setupOnStart()
             end
         end
 
+        if selfSettings.width and not (newParent and newParent:getClassName() == 'UIMiniWindowContainer') then
+            self:setWidth(selfSettings.width)
+        end
+
         if selfSettings.closed then
             self:close(true)
         else
@@ -216,6 +227,7 @@ function UIMiniWindow:setupOnStart()
             end
         end
     end
+    self:updateResizeBorders()
 end
 
 function UIMiniWindow:onVisibilityChange(visible)
@@ -235,6 +247,7 @@ function UIMiniWindow:onDragEnter(mousePos)
         parent:removeChild(self)
         containerParent:addChild(self)
         parent:saveChildren()
+        self:updateResizeBorders()
     end
 
     local oldPos = self:getPosition()
@@ -270,6 +283,7 @@ function UIMiniWindow:onDragLeave(droppedWidget, mousePos)
             end
         end
     end
+    self:updateResizeBorders()
     return true
 end
 
@@ -348,6 +362,16 @@ function UIMiniWindow:onHeightChange(height)
         })
     end
     self:fitOnParent()
+end
+
+function UIMiniWindow:onWidthChange(width)
+    local parent = self:getParent()
+    local isDocked = parent and parent:getClassName() == 'UIMiniWindowContainer'
+    if not self:isOn() and not isDocked then
+        self:setSettings({
+            width = width
+        })
+    end
 end
 
 function UIMiniWindow:getSettings(name)
@@ -456,10 +480,36 @@ end
 
 function UIMiniWindow:disableResize()
     self:getChildById('bottomResizeBorder'):disable()
+    local rightResizeBorder = self:getChildById('rightResizeBorder')
+    if rightResizeBorder then
+        rightResizeBorder:disable()
+    end
 end
 
 function UIMiniWindow:enableResize()
     self:getChildById('bottomResizeBorder'):enable()
+    local rightResizeBorder = self:getChildById('rightResizeBorder')
+    if rightResizeBorder and not (self:getParent() and self:getParent():getClassName() == 'UIMiniWindowContainer') then
+        rightResizeBorder:enable()
+    end
+end
+
+function UIMiniWindow:updateResizeBorders()
+    local rightResizeBorder = self:getChildById('rightResizeBorder')
+    if not rightResizeBorder then
+        return
+    end
+
+    local parent = self:getParent()
+    local isDocked = parent and parent:getClassName() == 'UIMiniWindowContainer'
+
+    if isDocked then
+        rightResizeBorder:disable()
+        rightResizeBorder:hide()
+    else
+        rightResizeBorder:enable()
+        rightResizeBorder:show()
+    end
 end
 
 function UIMiniWindow:fitOnParent()
@@ -475,11 +525,17 @@ function UIMiniWindow:setParent(parent, dontsave)
         self:saveParent(parent)
     end
     self:fitOnParent()
+    self:updateResizeBorders()
 end
 
 function UIMiniWindow:setHeight(height)
     UIWidget.setHeight(self, height)
     signalcall(self.onHeightChange, self, height)
+end
+
+function UIMiniWindow:setWidth(width)
+    UIWidget.setWidth(self, width)
+    signalcall(self.onWidthChange, self, width)
 end
 
 function UIMiniWindow:setContentHeight(height)

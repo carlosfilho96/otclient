@@ -26,8 +26,9 @@ MiniWindow
     anchors.right: parent.right
     height: 3
     minimum: 120
+    maximum: 2000
     margin-left: 3
-    margin-right: 3
+    margin-right: 4
     background: #ffffff88
 
   UIWidget
@@ -319,3 +320,15 @@ MiniWindow
 
       $pressed !disabled:
         image-clip: 20 20 20 20
+
+  ResizeBorder
+    id: rightResizeBorder
+    anchors.right: parent.right
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    width: 4
+    minimum: 120
+    maximum: 2000
+    margin-top: 3
+    margin-bottom: 3
+    background: #ffffff88

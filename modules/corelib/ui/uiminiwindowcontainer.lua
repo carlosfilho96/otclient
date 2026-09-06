@@ -146,6 +146,9 @@ function UIMiniWindowContainer:onDrop(widget, mousePos)
             widget:getParent():setWidth(190)
         end
         self:fitAll(widget)
+        if widget.updateResizeBorders then
+            widget:updateResizeBorders()
+        end
         return true
     end
 end
